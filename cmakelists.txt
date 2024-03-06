@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_STANDARD 20)
 
 #project name
 project(yk2)
@@ -21,13 +20,6 @@ add_library(${PROJECT_NAME} SHARED ${yk_src})
 add_executable(yk_test "src/main.c")
 
 target_link_libraries(yk_test yk2)
-
-add_custom_command(
-    TARGET yk_test POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-    ${SOURCE_DIR}/res ${BUILD_DIR}/res
-    COMMENT "Creating symbolic link to res folder"
-)
 
 #----------copy files----------#
 

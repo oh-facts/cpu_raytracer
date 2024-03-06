@@ -1,29 +1,25 @@
 
 #define mem_leak_msvc 0
-#include <Windows.h>
+
 #include <platform/yk_os.h>
 #include <yk_common.h>
+
 #if mem_leak_msvc
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-#include <iostream>
+    #define _CRTDBG_MAP_ALLOC
+    #include <stdlib.h>
+    #include <crtdbg.h>
 #endif
+
 
 int main(int argc, char *argv[])
 {
-    struct YkTimeState t;
 
     struct YkWindow win;
 
     yk_innit_window(&win);
-    
-    LARGE_INTEGER start_counter = {0};
-    QueryPerformanceCounter(&start_counter);
 
-    LARGE_INTEGER perf_freq = {0};
-    QueryPerformanceFrequency(&perf_freq);
-    i64 counter_freq = perf_freq.QuadPart;
+    struct YkClockRaw clock_raw = {0};
+    yk_clock_innit(&clock_raw);
 
     f64 total_time_elapsed = 0;
     f64 dt = 0;
@@ -79,11 +75,7 @@ int main(int argc, char *argv[])
 #endif
         //-------game loop end
 
-        LARGE_INTEGER end_counter = {0};
-        QueryPerformanceCounter(&end_counter);
-
-        i64 counter_elapsed = end_counter.QuadPart - start_counter.QuadPart;
-        total_time_elapsed = (1.f * counter_elapsed) / counter_freq;
+        total_time_elapsed = yk_get_time_since(&clock_raw);
 
         dt = total_time_elapsed - last_time_elapsed;
 

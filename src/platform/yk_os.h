@@ -97,9 +97,15 @@ YK_API void yk_window_poll();
 YK_API void yk_window_update(struct YkWindow* window);
 YK_API void yk_free_window(struct YkWindow* window);
 
-struct YkTimeState;
 
-YK_API void yk_time_begin();
-YK_API void yk_time_end();
+struct YkClockRaw
+{
+    i64 freq;
+    i64 start;
+};
+
+YK_API void yk_clock_innit(struct YkClockRaw *self);
+
+YK_API f64 yk_get_time_since(struct YkClockRaw *self);
 
 #endif // !YK_WIN32_WINDOW_H
