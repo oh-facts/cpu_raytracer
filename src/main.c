@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     struct YkWindow win;
 
     yk_innit_window(&win);
-
+    
     LARGE_INTEGER start_counter = {0};
     QueryPerformanceCounter(&start_counter);
 
