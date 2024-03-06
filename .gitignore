@@ -1,0 +1,9 @@
+.vscode*
+.out*
+out*
+build*
+.vs*
+.cache*
+compile_commands.json
+CMakeSettings.json
+res/
