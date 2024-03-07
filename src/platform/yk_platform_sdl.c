@@ -1,5 +1,6 @@
 #include <yk_platform.h>
-#include <SDL.h>
+
+#include <yk_sdl2_include.h>
 
 #include <yk_common.h>
 #include <yk_game.h>
@@ -54,7 +55,7 @@ int SDL_main(int argc, char *argv[])
         }
     }
     SDL_UpdateWindowSurface(win);
-    
+
     while (!quit)
     {
         f64 last_time_elapsed = total_time_elapsed;
