@@ -8,7 +8,12 @@ add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 #--------target--------#
 
-add_subdirectory(vendor/SDL EXCLUDE_FROM_ALL)
+if(WIN32)
+    add_subdirectory(vendor/SDL EXCLUDE_FROM_ALL)
+endif()
+if(UNIX)
+    find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3-shared)
+endif()
 
 include_directories(
     src
