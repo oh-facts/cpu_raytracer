@@ -1,49 +1,76 @@
+#include <yk_platform.h>
+#include <SDL3/SDL.h>
 
-#define mem_leak_msvc 0
-
-#include <platform/yk_os.h>
 #include <yk_common.h>
-
-#if mem_leak_msvc
-    #define _CRTDBG_MAP_ALLOC
-    #include <stdlib.h>
-    #include <crtdbg.h>
-#endif
-
+#include <yk_game.h>
 
 int main(int argc, char *argv[])
 {
-
-    struct YkWindow win;
-
-    yk_innit_window(&win);
-
     struct YkClockRaw clock_raw = {0};
     yk_clock_innit(&clock_raw);
 
     f64 total_time_elapsed = 0;
     f64 dt = 0;
 
-    while (win.win_data.is_running)
+    if (SDL_Init(SDL_INIT_VIDEO) != 0)
+    {
+        SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
+        return 1;
+    }
+
+    SDL_Window *window = SDL_CreateWindow(
+        "michaelsoft bimbos",
+        800, 600,
+        0);
+
+    if (!window)
+    {
+        SDL_Log("Unable to create window: %s", SDL_GetError());
+        SDL_Quit();
+        return 1;
+    }
+
+    // Main loop
+    SDL_Event event;
+    int quit = 0;
+
+    struct YkInput input = {0};
+
+    while (!quit)
     {
         f64 last_time_elapsed = total_time_elapsed;
 
-        // game loop start--------
-        if (!win.win_data.is_minimized)
+        while (SDL_PollEvent(&event))
         {
-            if (yk_input_is_key_tapped(&win.keys, YK_KEY_ESC))
+            switch (event.type)
             {
-                // state.shutdown(&state);
-                // engine_memory_cleanup(&state.engine_memory);
+                case SDL_EVENT_QUIT:
+                {
+                    quit = 1;
+                }break;
 
-                printf("We (I) love you");
-                // engine_memory_innit(&state.engine_memory);
-                // state.start(&state);
+                case SDL_EVENT_KEY_DOWN:
+                {
+                    if (event.key.keysym.sym == SDLK_q)
+                    {
+                        input.keys[YK_KEY_HOLD_HANDS] = 1;
+                    }
+                }break;
+
+                case SDL_EVENT_KEY_UP:
+                {
+                    if (event.key.keysym.sym == SDLK_q)
+                    {
+                        input.keys[YK_KEY_HOLD_HANDS] = 0;
+                    }
+                }break;
+                
             }
         }
 
-        yk_window_update(&win);
-        yk_window_poll();
+        // game loop start--------
+
+        handle_hand_holding(&input);
 
         // testing input
 #if 0    
@@ -122,7 +149,8 @@ int main(int argc, char *argv[])
 #endif
     }
 
-    yk_free_window(&win);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 
 #if mem_leak_msvc
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);

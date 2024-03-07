@@ -8,18 +8,28 @@ add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 #--------target--------#
 
+add_subdirectory(vendor/SDL EXCLUDE_FROM_ALL)
+
 include_directories(
     src
     src/platform
+    vendor/SDL/include
     )
 
-set(yk_src  "src/platform/yk_os_win.c" "src/yk_arena.c" "src/yk_math.c")
+if(WIN32)
+    set(yk_platform "src/platform/yk_platform_win32.c")
 
-add_library(${PROJECT_NAME} SHARED ${yk_src}) 
+elseif(UNIX)
+    set(yk_platform "src/platform/yk_platform_posix.c")
+endif()
 
-add_executable(yk_test "src/main.c")
+set(yk_src  "src/yk_arena.c" "src/yk_math.c" "src/yk_game.c")
 
-target_link_libraries(yk_test yk2)
+add_library(${PROJECT_NAME} SHARED ${yk_src} ${yk_platform}) 
+
+add_executable(yk_test "src/platform/yk_platform_sdl.c")
+
+target_link_libraries(yk_test yk2 SDL3::SDL3)
 
 #----------copy files----------#
 
@@ -31,6 +41,13 @@ add_custom_target(
         ${CMAKE_BINARY_DIR}/compile_commands.json
         ${CMAKE_CURRENT_LIST_DIR}
 )
+
+add_custom_target(
+    copy-dlls ALL
+    ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_BINARY_DIR}/vendor/SDL/SDL3.dll
+        ${CMAKE_BINARY_DIR}
+    )
 
 #|----------------|
 
