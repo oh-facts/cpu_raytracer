@@ -12,7 +12,7 @@ if(WIN32)
     add_subdirectory(vendor/SDL EXCLUDE_FROM_ALL)
 endif()
 if(UNIX)
-    find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3-shared)
+    find_package(SDL2 REQUIRED)
 endif()
 
 include_directories(
@@ -47,13 +47,17 @@ add_custom_target(
         ${CMAKE_CURRENT_LIST_DIR}
 )
 if(WIN32)
-add_custom_target(
-    copy-dlls ALL
-    ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_BINARY_DIR}/vendor/SDL/SDL2d.dll
-        ${CMAKE_BINARY_DIR}
+    
+    add_custom_target(
+        copy-dlls ALL
+        ${CMAKE_COMMAND} -E copy_if_different
+            ${CMAKE_BINARY_DIR}/vendor/SDL/SDL2d.dll
+            ${CMAKE_BINARY_DIR}
     )
+
+    add_dependencies(copy-dlls yk_test)
 endif()
+
 #|----------------|
 
 #---------------------#
