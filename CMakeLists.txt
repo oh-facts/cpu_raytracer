@@ -41,14 +41,14 @@ add_custom_target(
         ${CMAKE_BINARY_DIR}/compile_commands.json
         ${CMAKE_CURRENT_LIST_DIR}
 )
-
+if(WIN32)
 add_custom_target(
     copy-dlls ALL
     ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_BINARY_DIR}/vendor/SDL/SDL3.dll
         ${CMAKE_BINARY_DIR}
     )
-
+endif()
 #|----------------|
 
 #---------------------#
