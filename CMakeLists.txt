@@ -34,7 +34,7 @@ add_library(${PROJECT_NAME} SHARED ${yk_src} ${yk_platform})
 
 add_executable(yk_test "src/platform/yk_platform_sdl.c")
 
-target_link_libraries(yk_test yk2 SDL3::SDL3)
+target_link_libraries(yk_test yk2 SDL2main SDL2)
 
 #----------copy files----------#
 
@@ -50,7 +50,7 @@ if(WIN32)
 add_custom_target(
     copy-dlls ALL
     ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_BINARY_DIR}/vendor/SDL/SDL3.dll
+        ${CMAKE_BINARY_DIR}/vendor/SDL/SDL2d.dll
         ${CMAKE_BINARY_DIR}
     )
 endif()
