@@ -17,6 +17,7 @@ void yk_clock_innit(struct YkClockRaw *self)
 f64 yk_get_time_since(struct YkClockRaw *self)
 {
     printf("bleh bleh bleh unimplemented");
+    return 69;
 }
 #endif
 
