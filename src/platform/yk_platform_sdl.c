@@ -5,7 +5,7 @@
 #include <yk_common.h>
 #include <yk_game.h>
 
-int SDL_main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     struct YkClockRaw clock_raw = {0};
     yk_clock_innit(&clock_raw);
