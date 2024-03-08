@@ -42,20 +42,9 @@ int main(int argc, char *argv[])
 
     SDL_SetRenderDrawColor(ren, 0xFF, 0, 0xFF, 0xFF);
 
-    for (u32 i = 0; i < win_surf->w; i++)
-    {
-        for (u32 j = 0; j < win_surf->h; j++)
-        {
-            SDL_Rect rect = {0};
-            rect.w = 1;
-            rect.h = 1;
-            rect.x = i;
-            rect.y = j;
-            SDL_FillRect(win_surf, &rect, SDL_MapRGBA(win_surf->format, j % 256, 0, i % 256, 0xFF));
-        }
-    }
-    SDL_UpdateWindowSurface(win);
+    u32 *buffer = malloc(win_surf->w * win_surf->h * sizeof(u32));
 
+    struct YkGame game = {0};
     while (!quit)
     {
         f64 last_time_elapsed = total_time_elapsed;
@@ -72,27 +61,90 @@ int main(int argc, char *argv[])
 
             case SDL_KEYDOWN:
             {
-                if (event.key.keysym.sym == SDLK_q)
+                switch (event.key.keysym.sym)
                 {
-                    input.keys[YK_KEY_HOLD_HANDS] = 1;
+                case SDLK_w:
+                {
+                    input.keys[YK_ACTION_UP] = 1;
+                }
+                break;
+                case SDLK_a:
+                {
+                    input.keys[YK_ACTION_LEFT] = 1;
+                }
+                break;
+                case SDLK_s:
+                {
+                    input.keys[YK_ACTION_DOWN] = 1;
+                }
+                break;
+                case SDLK_d:
+                {
+                    input.keys[YK_ACTION_RIGHT] = 1;
+                }
+                break;
+
+                default:
+                    break;
                 }
             }
             break;
 
             case SDL_KEYUP:
             {
-                if (event.key.keysym.sym == SDLK_q)
+                switch (event.key.keysym.sym)
                 {
-                    input.keys[YK_KEY_HOLD_HANDS] = 0;
+                case SDLK_w:
+                {
+                    input.keys[YK_ACTION_UP] = 0;
+                }
+                break;
+                case SDLK_a:
+                {
+                    input.keys[YK_ACTION_LEFT] = 0;
+                }
+                break;
+                case SDLK_s:
+                {
+                    input.keys[YK_ACTION_DOWN] = 0;
+                }
+                break;
+                case SDLK_d:
+                {
+                    input.keys[YK_ACTION_RIGHT] = 0;
+                }
+                break;
+
+                default:
+                    break;
                 }
             }
-            break;
             }
+            break;
         }
 
         // game loop start--------
 
-        handle_hand_holding(&input);
+        handle_hand_holding(&input, &game);
+
+        for (u32 i = 0; i < win_surf->w; i++)
+        {
+            for (u32 j = 0; j < win_surf->h; j++)
+            {
+                u32 posX = i - game.pos_x;
+                u32 posY = j - game.pos_y;
+
+                buffer[i + win_surf->w * j] = (0xFF << 24) | ((posX % 256) << 16) | ((0) << 8) | (posY % 256);
+            }
+        }
+
+        SDL_Surface *image_surface = SDL_CreateRGBSurfaceFrom(buffer, win_surf->w, win_surf->h, 32, win_surf->w * sizeof(u32), 0xFF0000, 0x00FF00, 0x0000FF, 0xFF000000);
+        SDL_BlitSurface(image_surface, 0, win_surf, 0);
+        SDL_FreeSurface(image_surface);
+        SDL_UpdateWindowSurface(win);
+
+        SDL_SetRenderDrawColor(ren, 0, 0, 0, 0xFF);
+        SDL_RenderClear(ren);
 
 #if 0    
         if (yk_input_is_key_tapped(&state.window.keys, 'A'))

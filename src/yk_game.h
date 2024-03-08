@@ -3,20 +3,31 @@
 
 #include <yk_common.h>
 #include <yk_arena.h>
+#include <yk_math.h>
 
-enum YK_KEY
+enum YK_ACTION
 {
-    YK_KEY_HOLD_HANDS = 0,
-    YK_KEY_COUNT
+    YK_ACTION_HOLD_HANDS = 0,
+    YK_ACTION_UP,
+    YK_ACTION_DOWN,
+    YK_ACTION_LEFT,
+    YK_ACTION_RIGHT,
+    YK_ACTION_COUNT
 };
 
-typedef enum YK_KEY YK_KEY;
+typedef enum YK_ACTION YK_ACTION;
 
 struct YkInput
 {
-    b8 keys[YK_KEY_COUNT];
+    b8 keys[YK_ACTION_COUNT];
 };
 
-YK_API void handle_hand_holding(struct YkInput* input);
+struct YkGame
+{
+    u32 pos_x;
+    u32 pos_y;
+};
+
+YK_API void handle_hand_holding(struct YkInput* input, struct YkGame* game);
 
 #endif

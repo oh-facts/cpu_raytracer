@@ -1,9 +1,24 @@
 #include <yk_game.h>
 
-YK_API void handle_hand_holding(struct YkInput* input)
+#define speed 5
+
+YK_API void handle_hand_holding(struct YkInput* input, struct YkGame* game)
 {
-    if(input->keys[YK_KEY_HOLD_HANDS] == 1)
+    if(input->keys[YK_ACTION_UP] == 1)
     {
-        printf(":flushed:");
+        game->pos_y += speed;
     }
+    if(input->keys[YK_ACTION_DOWN] == 1)
+    {
+        game->pos_y -= speed;
+    }
+    if(input->keys[YK_ACTION_LEFT] == 1)
+    {
+        game->pos_x += speed;
+    }
+    if(input->keys[YK_ACTION_RIGHT] == 1)
+    {
+        game->pos_x -= speed;
+    }
+
 }
