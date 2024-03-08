@@ -30,14 +30,14 @@ YK_API void render(struct render_buffer *screen, struct YkGame *game)
     u32 pos_y = game->pos_y;
     u32 *pixels = screen->pixels;
 
-    for (u32 j = 0; j < height; j++)
+    for (u32 i = 0; i < height; i++)
     {
-        for (u32 i = 0; i < width; i++)
-        {
-            u32 posX = i - pos_x;
-            u32 posY = j - pos_y;
+        u32 posY = i - pos_y;
 
-            (pixels)[i + width * j] = (0xFF << 24) | ((posX % 256) << 16) | ((0) << 8) | (posY % 256);
+        for (u32 j = 0; j < width; j++)
+        {
+            u32 posX = j - pos_x;
+            pixels[width * i + j] = (0xFF << 24) | ((posX % 256) << 16) | ((0) << 8) | (posY % 256);
         }
     }
 }
