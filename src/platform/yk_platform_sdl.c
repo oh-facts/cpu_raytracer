@@ -13,6 +13,8 @@ int main(int argc, char *argv[])
     f64 total_time_elapsed = 0;
     f64 dt = 0;
 
+    //ToDo(facts): Use the asserts you made
+
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
     {
         SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
@@ -20,7 +22,7 @@ int main(int argc, char *argv[])
     }
 
     SDL_Window *win = SDL_CreateWindow(
-        "michaelsoft bimbos",
+        "yk",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600,
         0);
 
@@ -42,13 +44,21 @@ int main(int argc, char *argv[])
 
     SDL_SetRenderDrawColor(ren, 0xFF, 0, 0xFF, 0xFF);
 
+    // ToDo(facts): use an arena
     u32 *buffer = malloc(win_surf->w * win_surf->h * sizeof(u32));
 
     struct YkGame game = {0};
+
+    struct render_buffer render_target = {0};
+    render_target.pixels = (u32 *)win_surf->pixels;
+    render_target.width = win_surf->w;
+    render_target.height = win_surf->h;
+
     while (!quit)
     {
         f64 last_time_elapsed = total_time_elapsed;
 
+        // ToDo(facts): Move this into a function. I dont want to scroll so much
         while (SDL_PollEvent(&event))
         {
             switch (event.type)
@@ -59,6 +69,10 @@ int main(int argc, char *argv[])
             }
             break;
 
+            // ToDo(facts): Use a ternary operator or make an array of sdl_key_size and update
+            // based on indices. I don't want to maintain two nearly identical
+            // switch cases for input. I just put this together quick so I had something
+            // to play with.
             case SDL_KEYDOWN:
             {
                 switch (event.key.keysym.sym)
@@ -126,26 +140,11 @@ int main(int argc, char *argv[])
         // game loop start--------
 
         handle_hand_holding(&input, &game);
-
-        for (u32 i = 0; i < win_surf->w; i++)
-        {
-            for (u32 j = 0; j < win_surf->h; j++)
-            {
-                u32 posX = i - game.pos_x;
-                u32 posY = j - game.pos_y;
-
-                buffer[i + win_surf->w * j] = (0xFF << 24) | ((posX % 256) << 16) | ((0) << 8) | (posY % 256);
-            }
-        }
-
-        SDL_Surface *image_surface = SDL_CreateRGBSurfaceFrom(buffer, win_surf->w, win_surf->h, 32, win_surf->w * sizeof(u32), 0xFF0000, 0x00FF00, 0x0000FF, 0xFF000000);
-        SDL_BlitSurface(image_surface, 0, win_surf, 0);
-        SDL_FreeSurface(image_surface);
+        render(&render_target, &game);
+        
         SDL_UpdateWindowSurface(win);
 
-        SDL_SetRenderDrawColor(ren, 0, 0, 0, 0xFF);
-        SDL_RenderClear(ren);
-
+  
 #if 0    
         if (yk_input_is_key_tapped(&state.window.keys, 'A'))
         {
@@ -221,7 +220,8 @@ int main(int argc, char *argv[])
         }
 #endif
     }
-
+    free(buffer);
+    SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
     SDL_Quit();
 

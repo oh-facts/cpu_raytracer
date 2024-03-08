@@ -28,6 +28,14 @@ struct YkGame
     u32 pos_y;
 };
 
+struct render_buffer
+{
+    u32* pixels;
+    u32 width;
+    u32 height;
+};
+
+YK_API void render(struct render_buffer* screen, struct YkGame * game);
 YK_API void handle_hand_holding(struct YkInput* input, struct YkGame* game);
 
 #endif
