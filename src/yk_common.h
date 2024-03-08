@@ -16,16 +16,17 @@
         volatile int *ptr = 0;   \
         *ptr = 0;                \
     }
-#define AssertM(Expression, msg)  \
-    if (!(Expression))            \
-    {                             \
-        printf("Fatal: %s", msg); \
-        volatile int *ptr = 0;    \
-        *ptr = 0;                 \
-    }
+#define AssertM(Expression, format, ...) \
+    do {                                 \
+        if (!(Expression)) {              \
+            printf("Fatal: " format, ##__VA_ARGS__); \
+            volatile int *ptr = 0;        \
+            *ptr = 0;                     \
+        }                                \
+    } while (0)
 #else
 #define Assert(Expression)
-#define AssertM(Expression, msg)
+#define AssertM(Expression, format, ...)
 #endif
 
 #define Kilobytes(Value) ((uint64_t)(Value) * 1024)

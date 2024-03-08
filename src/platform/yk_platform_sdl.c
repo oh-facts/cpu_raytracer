@@ -5,6 +5,7 @@
 #include <yk_common.h>
 #include <yk_game.h>
 
+
 int main(int argc, char *argv[])
 {
     struct YkClockRaw clock_raw = {0};
@@ -40,10 +41,6 @@ int main(int argc, char *argv[])
     struct YkInput input = {0};
 
     SDL_Surface *win_surf = SDL_GetWindowSurface(win);
-    SDL_Renderer *ren = SDL_CreateSoftwareRenderer(win_surf);
-
-    SDL_SetRenderDrawColor(ren, 0xFF, 0, 0xFF, 0xFF);
-
     // ToDo(facts): use an arena
     u32 *buffer = malloc(win_surf->w * win_surf->h * sizeof(u32));
 
@@ -221,7 +218,6 @@ int main(int argc, char *argv[])
 #endif
     }
     free(buffer);
-    SDL_DestroyRenderer(ren);
     SDL_DestroyWindow(win);
     SDL_Quit();
 
