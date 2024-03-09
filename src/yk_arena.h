@@ -11,12 +11,12 @@ struct Arena
 };
 
 
-void* _arena_alloc(struct Arena* arena, size_t size);
+YK_API void* _arena_alloc(struct Arena* arena, size_t size);
 
 #define push_struct(arena, type) _arena_alloc(arena, sizeof(type))
 
 #define push_array(arena,type,count) _arena_alloc(arena, sizeof(type) * count)
 
-void arena_innit(struct Arena* arena, size_t size, void* base);
+YK_API void arena_innit(struct Arena* arena, size_t size, void* base);
 
 #endif

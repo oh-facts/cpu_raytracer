@@ -1,48 +1,66 @@
-#include <yk_platform.h>
-
 #include <yk_sdl2_include.h>
 
 #include <yk_common.h>
 #include <yk_game.h>
 
+#define DEBUG_SDL_CHECK 1
+
+#if DEBUG_SDL_CHECK
+
+#define SDL_CHECK_RES(res)                \
+    do                                    \
+    {                                     \
+        if (res != 0)                     \
+        {                                 \
+            printf("%s", SDL_GetError()); \
+            volatile int *ptr = 0;        \
+            *ptr = 0;                     \
+        }                                 \
+    } while (0)
+
+#define SDL_CHECK(expr) AssertM(expr, "%s", SDL_GetError())
+
+#else
+#define SDL_CHECK_RES(expr) expr
+#define SDL_CHECK(expr)
+#endif
 
 int main(int argc, char *argv[])
 {
-    struct YkClockRaw clock_raw = {0};
-    yk_clock_innit(&clock_raw);
+    //sdl has a high precision clock. use that
 
-    f64 total_time_elapsed = 0;
-    f64 dt = 0;
+    //platform shit starts here ------------------------
 
-    //ToDo(facts): Use the asserts you made
+ 
+    // ToDo(facts): Use the asserts you made
 
-    if (SDL_Init(SDL_INIT_VIDEO) != 0)
-    {
-        SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
-        return 1;
-    }
+    SDL_CHECK_RES(SDL_Init(SDL_INIT_VIDEO));
 
     SDL_Window *win = SDL_CreateWindow(
         "yk",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600,
         0);
 
-    if (!win)
-    {
-        SDL_Log("Unable to create window: %s", SDL_GetError());
-        SDL_Quit();
-        return 1;
-    }
+    SDL_CHECK(win);
 
-    // Main loop
-    SDL_Event event;
-    int quit = 0;
-
-    struct YkInput input = {0};
 
     SDL_Surface *win_surf = SDL_GetWindowSurface(win);
-    // ToDo(facts): use an arena
-    u32 *buffer = malloc(win_surf->w * win_surf->h * sizeof(u32));
+    SDL_CHECK(win_surf);
+
+    
+    SDL_Event event;
+    int quit = 0;  
+
+    f64 total_time_elapsed = 0;
+    f64 dt = 0;
+
+    u64 time_start = SDL_GetTicks64();
+
+    //-----------------------------platform shit ends here
+
+
+    // game boilerplate
+    struct YkInput input = {0};
 
     struct YkGame game = {0};
 
@@ -50,7 +68,7 @@ int main(int argc, char *argv[])
     render_target.pixels = (u32 *)win_surf->pixels;
     render_target.width = win_surf->w;
     render_target.height = win_surf->h;
-
+    //--------------------
     while (!quit)
     {
         f64 last_time_elapsed = total_time_elapsed;
@@ -136,44 +154,15 @@ int main(int argc, char *argv[])
 
         // game loop start--------
 
-        handle_hand_holding(&input, &game);
-        render(&render_target, &game);
-        
-        SDL_UpdateWindowSurface(win);
+        yk_update_and_render_game(&render_target, &input, &game);
 
-  
-#if 0    
-        if (yk_input_is_key_tapped(&state.window.keys, 'A'))
-        {
-            printf("A tapped");
-        }
+        SDL_CHECK_RES(SDL_UpdateWindowSurface(win));
 
-
-        if (yk_input_is_key_held(&state.window.keys, 'A'))
-        {
-            printf("A held");
-        }
-
-        if (yk_input_is_key_released(&state.window.keys, 'A'))
-        {
-            printf("A released");
-        }
-
-        if (yk_input_is_key_released(&state.window.keys, 'V'))
-        {
-            printf("V released");
-        }
-
-        if (yk_input_is_click(&state.window.clicks, YK_MOUSE_BUTTON_RIGHT))
-        {
-            printf("right Clicked");
-        }
-#endif
         //-------game loop end
 
-        total_time_elapsed = yk_get_time_since(&clock_raw);
-
-        dt = total_time_elapsed - last_time_elapsed;
+       // total_time_elapsed = yk_get_time_since(&clock_raw);
+        total_time_elapsed = (SDL_GetTicks64() - time_start);
+        dt = (total_time_elapsed - last_time_elapsed)/1000;
 
         // perf stats
 #if 1
@@ -217,7 +206,7 @@ int main(int argc, char *argv[])
         }
 #endif
     }
-    free(buffer);
+
     SDL_DestroyWindow(win);
     SDL_Quit();
 

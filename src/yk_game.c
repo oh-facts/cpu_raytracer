@@ -2,8 +2,10 @@
 
 #define speed 5
 
-YK_API void handle_hand_holding(struct YkInput *input, struct YkGame *game)
+
+YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *input, struct YkGame *game)
 {
+    // update game
     if (input->keys[YK_ACTION_UP] == 1)
     {
         game->pos_y += speed;
@@ -20,10 +22,8 @@ YK_API void handle_hand_holding(struct YkInput *input, struct YkGame *game)
     {
         game->pos_x -= speed;
     }
-}
 
-YK_API void render(struct render_buffer *screen, struct YkGame *game)
-{
+    // render game
     u32 width = screen->width;
     u32 height = screen->height;
     u32 pos_x = game->pos_x;
