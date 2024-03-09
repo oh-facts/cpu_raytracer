@@ -2,6 +2,30 @@
 
 #define speed 5
 
+static u32 g_seed = 42;
+
+//lcg
+u32 lcg_rand()
+{
+    g_seed = 214013 * g_seed + 2531011;
+    return (g_seed >> 16);
+}
+
+/*
+    Testing different rand functions
+    rand() sucks so so hard balls 
+    its unbelievable
+*/
+u32 test_rand()
+{
+    #if 1
+    return lcg_rand() % 0xFF;
+    #endif
+
+    #if 0
+    return rand() % 0xFF;
+    #endif
+}
 
 YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *input, struct YkGame *game)
 {
@@ -36,8 +60,9 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
 
         for (u32 j = 0; j < width; j++)
         {
-            u32 posX = j - pos_x;
-            pixels[width * i + j] = (0xFF << 24) | ((posX % 256) << 16) | ((0) << 8) | (posY % 256);
+            pixels[width * i + j] = (0xFF <<24) | (test_rand() << 16) | (test_rand() << 8) | test_rand();
+            //        u32 posX = j - pos_x;
+            //      pixels[width * i + j] = (0xFF << 24) | ((posX % 256) << 16) | ((0) << 8) | (posY % 256);
         }
     }
 }

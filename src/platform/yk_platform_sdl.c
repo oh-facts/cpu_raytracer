@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     SDL_CHECK_RES(SDL_Init(SDL_INIT_VIDEO));
 
     SDL_Window *win = SDL_CreateWindow(
-        "yk",
+        "television",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600,
         0);
 
