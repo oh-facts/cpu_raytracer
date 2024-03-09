@@ -8,23 +8,11 @@
 #define DEBUG_SDL_CHECK 1
 
 #if DEBUG_SDL_CHECK
-
-#define SDL_CHECK_RES(res)                \
-    do                                    \
-    {                                     \
-        if (res != 0)                     \
-        {                                 \
-            printf("%s", SDL_GetError()); \
-            volatile int *ptr = 0;        \
-            *ptr = 0;                     \
-        }                                 \
-    } while (0)
-
-#define SDL_CHECK(expr) AssertM(expr, "%s", SDL_GetError())
-
+    #define SDL_CHECK_RES(res) _Assert_helper(res == 0, "%s", SDL_GetError())
+    #define SDL_CHECK(expr) _Assert_helper(expr, "%s", SDL_GetError())
 #else
-#define SDL_CHECK_RES(expr) expr
-#define SDL_CHECK(expr)
+    #define SDL_CHECK_RES(expr) expr
+    #define SDL_CHECK(expr)
 #endif
 
 int main(int argc, char *argv[])
@@ -32,7 +20,6 @@ int main(int argc, char *argv[])
     //sdl has a high precision clock. use that
 
     //platform shit starts here ------------------------
-    
     struct YkClockRaw clock_raw = {0};
     yk_clock_innit(&clock_raw);
 
