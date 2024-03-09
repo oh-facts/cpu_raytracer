@@ -1,3 +1,5 @@
+#include <yk_platform.h>
+
 #include <yk_sdl2_include.h>
 
 #include <yk_common.h>
@@ -30,8 +32,13 @@ int main(int argc, char *argv[])
     //sdl has a high precision clock. use that
 
     //platform shit starts here ------------------------
+    
+    struct YkClockRaw clock_raw = {0};
+    yk_clock_innit(&clock_raw);
 
- 
+    f64 total_time_elapsed = 0;
+    f64 dt = 0;
+
     // ToDo(facts): Use the asserts you made
 
     SDL_CHECK_RES(SDL_Init(SDL_INIT_VIDEO));
@@ -49,12 +56,7 @@ int main(int argc, char *argv[])
 
     
     SDL_Event event;
-    int quit = 0;  
-
-    f64 total_time_elapsed = 0;
-    f64 dt = 0;
-
-    u64 time_start = SDL_GetTicks64();
+    int quit = 0;
 
     //-----------------------------platform shit ends here
 
@@ -160,9 +162,9 @@ int main(int argc, char *argv[])
 
         //-------game loop end
 
-       // total_time_elapsed = yk_get_time_since(&clock_raw);
-        total_time_elapsed = (SDL_GetTicks64() - time_start);
-        dt = (total_time_elapsed - last_time_elapsed)/1000;
+        total_time_elapsed = yk_get_time_since(&clock_raw);
+
+        dt = total_time_elapsed - last_time_elapsed;
 
         // perf stats
 #if 1

@@ -21,9 +21,16 @@ include_directories(
     vendor/SDL/include
     )
 
+if(WIN32)
+    set(yk_platform "src/platform/yk_platform_win32.c")
+
+elseif(UNIX)
+    set(yk_platform "src/platform/yk_platform_posix.c")
+endif()
+
 set(yk_src  "src/yk_arena.c" "src/yk_math.c" "src/yk_game.c" "src/yk_arena.c")
 
-add_library(${PROJECT_NAME} SHARED ${yk_src}) 
+add_library(${PROJECT_NAME} SHARED ${yk_src} ${yk_platform}) 
 
 add_executable(yk_test "src/platform/yk_platform_sdl.c")
 
