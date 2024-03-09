@@ -8,18 +8,18 @@
 #define DEBUG_SDL_CHECK 1
 
 #if DEBUG_SDL_CHECK
-    #define SDL_CHECK_RES(res) _Assert_helper(res == 0, "%s", SDL_GetError())
-    #define SDL_CHECK(expr) _Assert_helper(expr, "%s", SDL_GetError())
+#define SDL_CHECK_RES(res) _Assert_helper(res == 0, "%s", SDL_GetError())
+#define SDL_CHECK(expr) _Assert_helper(expr, "%s", SDL_GetError())
 #else
-    #define SDL_CHECK_RES(expr) expr
-    #define SDL_CHECK(expr)
+#define SDL_CHECK_RES(expr) expr
+#define SDL_CHECK(expr)
 #endif
 
 int main(int argc, char *argv[])
 {
-    //sdl has a high precision clock. use that
+    // sdl has a high precision clock. use that
 
-    //platform shit starts here ------------------------
+    // platform shit starts here ------------------------
     struct YkClockRaw clock_raw = {0};
     yk_clock_innit(&clock_raw);
 
@@ -37,16 +37,13 @@ int main(int argc, char *argv[])
 
     SDL_CHECK(win);
 
-
     SDL_Surface *win_surf = SDL_GetWindowSurface(win);
     SDL_CHECK(win_surf);
 
-    
     SDL_Event event;
     int quit = 0;
 
     //-----------------------------platform shit ends here
-
 
     // game boilerplate
     struct YkInput input = {0};
@@ -142,8 +139,14 @@ int main(int argc, char *argv[])
         }
 
         // game loop start--------
+        static f32 fixed_dt;
+        fixed_dt += dt;
 
-        yk_update_and_render_game(&render_target, &input, &game);
+        if (fixed_dt > 1/60.f)
+        {
+            fixed_dt = 0;
+            yk_update_and_render_game(&render_target, &input, &game);
+        }
 
         SDL_CHECK_RES(SDL_UpdateWindowSurface(win));
 
