@@ -1,5 +1,3 @@
-#include <yk_platform.h>
-
 #include <yk_sdl2_include.h>
 
 #include <yk_common.h>
@@ -20,8 +18,6 @@ int main(int argc, char *argv[])
     // sdl has a high precision clock. use that
 
     // platform shit starts here ------------------------
-    struct YkClockRaw clock_raw = {0};
-    yk_clock_innit(&clock_raw);
 
     f64 total_time_elapsed = 0;
     f64 dt = 0;
@@ -142,7 +138,7 @@ int main(int argc, char *argv[])
         static f32 fixed_dt;
         fixed_dt += dt;
 
-        if (fixed_dt > 1/60.f)
+        if (fixed_dt > 1 / 60.f)
         {
             fixed_dt = 0;
             yk_update_and_render_game(&render_target, &input, &game);
@@ -152,7 +148,7 @@ int main(int argc, char *argv[])
 
         //-------game loop end
 
-        total_time_elapsed = yk_get_time_since(&clock_raw);
+        total_time_elapsed = SDL_GetTicks64()/1000.f;
 
         dt = total_time_elapsed - last_time_elapsed;
 
@@ -162,45 +158,34 @@ int main(int argc, char *argv[])
 #define num_frames_for_avg 60
 #define print_stats_time 5
 
-        local_persist f64 total_frame_rate;
-        local_persist f64 total_frame_time;
+        local_persist f64 frame_time;
         local_persist u32 frame_count;
         local_persist f32 time_since_print;
 
-        total_frame_rate += 1 / dt;
-        total_frame_time += dt;
+        frame_time += dt;
         frame_count++;
         time_since_print += dt;
 
         if (time_since_print > print_stats_time)
         {
-            f64 avg_frame_rate = total_frame_rate / frame_count;
-            f64 avg_frame_time = total_frame_time / frame_count;
+            frame_time /=  frame_count;
+            f64 frame_rate = 1 / frame_time ;
 
             printf("\n     perf stats     \n");
             printf("\n--------------------\n");
 
-            // print instantaneous frame rate/time
-#if 0
-            printf("frame time : %.3f ms\n", dt * 1000.f);
-            printf("frame rate : %.0f \n", 1/ dt);
-#endif
-            printf("average frame time : %.3f ms\n", avg_frame_time * 1000.f);
-            printf("average frame rate : %.0f \n", avg_frame_rate);
+            printf("frame time : %.3f ms\n", frame_time * 1000.f);
+            printf("frame rate : %.0f \n", frame_rate);
 
             printf("---------------------\n");
 
-            total_frame_rate = 0;
-            total_frame_time = 0;
+            frame_time = 0;
             frame_count = 0;
 
             time_since_print = 0;
         }
 #endif
     }
-
-    SDL_DestroyWindow(win);
-    SDL_Quit();
 
 #if mem_leak_msvc
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
