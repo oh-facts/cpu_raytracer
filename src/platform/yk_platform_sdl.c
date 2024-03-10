@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
     SDL_CHECK(win_surf);
 
     SDL_Event event;
-    int quit = 0;
+    b8 quit = 0;
 
     //-----------------------------platform shit ends here
 
@@ -47,9 +47,12 @@ int main(int argc, char *argv[])
     struct YkGame game = {0};
 
     struct render_buffer render_target = {0};
-    render_target.pixels = (u32 *)win_surf->pixels;
-    render_target.width = win_surf->w;
-    render_target.height = win_surf->h;
+    render_target.height = 60;
+    render_target.width = 80;
+    render_target.pixels = malloc(sizeof(u32) * render_target.height * render_target.width);
+
+    SDL_Surface *render_surface = SDL_CreateRGBSurfaceFrom(render_target.pixels, render_target.width, render_target.height, 32, render_target.width * sizeof(u32), 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+        
     //--------------------
     while (!quit)
     {
@@ -135,20 +138,29 @@ int main(int argc, char *argv[])
         }
 
         // game loop start--------
-        static f32 fixed_dt;
+        local_persist f32 fixed_dt;
         fixed_dt += dt;
 
         if (fixed_dt > 1 / 60.f)
         {
             fixed_dt = 0;
             yk_update_and_render_game(&render_target, &input, &game);
-        }
 
-        SDL_CHECK_RES(SDL_UpdateWindowSurface(win));
+            SDL_Rect src = {0};
+            src.w = render_surface->w;
+            src.h = render_surface->h;
+
+            SDL_Rect dst = {0};
+            dst.w = win_surf->w;
+            dst.h = win_surf->h;
+
+            SDL_BlitScaled(render_surface, &src, win_surf, &dst);
+            SDL_CHECK_RES(SDL_UpdateWindowSurface(win));
+        }
 
         //-------game loop end
 
-        total_time_elapsed = SDL_GetTicks64()/1000.f;
+        total_time_elapsed = SDL_GetTicks64() / 1000.f;
 
         dt = total_time_elapsed - last_time_elapsed;
 
@@ -168,8 +180,8 @@ int main(int argc, char *argv[])
 
         if (time_since_print > print_stats_time)
         {
-            frame_time /=  frame_count;
-            f64 frame_rate = 1 / frame_time ;
+            frame_time /= frame_count;
+            f64 frame_rate = 1 / frame_time;
 
             printf("\n     perf stats     \n");
             printf("\n--------------------\n");

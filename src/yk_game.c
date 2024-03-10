@@ -13,7 +13,7 @@ u32 lcg_rand()
 
 /*
     Testing different rand functions
-    rand() sucks so so hard balls
+    rand() sucks so so hard balls (speedwise)
     its unbelievable
 */
 u32 test_rand()
