@@ -15,14 +15,10 @@
 
 int main(int argc, char *argv[])
 {
-    // sdl has a high precision clock. use that
-
     // platform shit starts here ------------------------
 
     f64 total_time_elapsed = 0;
     f64 dt = 0;
-
-    // ToDo(facts): Use the asserts you made
 
     SDL_CHECK_RES(SDL_Init(SDL_INIT_VIDEO));
 
@@ -45,6 +41,7 @@ int main(int argc, char *argv[])
     struct YkInput input = {0};
 
     struct YkGame game = {0};
+    yk_innit_game(&game);
 
     struct render_buffer render_target = {0};
     render_target.height = 60;
@@ -52,7 +49,7 @@ int main(int argc, char *argv[])
     render_target.pixels = malloc(sizeof(u32) * render_target.height * render_target.width);
 
     SDL_Surface *render_surface = SDL_CreateRGBSurfaceFrom(render_target.pixels, render_target.width, render_target.height, 32, render_target.width * sizeof(u32), 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-        
+
     //--------------------
     while (!quit)
     {
@@ -97,6 +94,11 @@ int main(int argc, char *argv[])
                     input.keys[YK_ACTION_RIGHT] = 1;
                 }
                 break;
+                case SDLK_F1:
+                {
+                    input.keys[YK_ACTION_HOLD_HANDS] = 1;
+                }
+                break;
 
                 default:
                     break;
@@ -128,6 +130,11 @@ int main(int argc, char *argv[])
                     input.keys[YK_ACTION_RIGHT] = 0;
                 }
                 break;
+                case SDLK_F1:
+                {
+                    input.keys[YK_ACTION_HOLD_HANDS] = 0;
+                }
+                break;
 
                 default:
                     break;
@@ -143,18 +150,10 @@ int main(int argc, char *argv[])
 
         if (fixed_dt > 1 / 60.f)
         {
+            yk_update_and_render_game(&render_target, &input, &game, fixed_dt);
             fixed_dt = 0;
-            yk_update_and_render_game(&render_target, &input, &game);
 
-            SDL_Rect src = {0};
-            src.w = render_surface->w;
-            src.h = render_surface->h;
-
-            SDL_Rect dst = {0};
-            dst.w = win_surf->w;
-            dst.h = win_surf->h;
-
-            SDL_BlitScaled(render_surface, &src, win_surf, &dst);
+            SDL_BlitScaled(render_surface, 0, win_surf, 0);
             SDL_CHECK_RES(SDL_UpdateWindowSurface(win));
         }
 

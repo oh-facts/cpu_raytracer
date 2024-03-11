@@ -24,8 +24,14 @@ struct YkInput
 
 struct YkGame
 {
+    //player data
     u32 pos_x;
     u32 pos_y;
+    u32 width;
+    u32 height;
+
+    //world
+    f32 timer;
 };
 
 struct render_buffer
@@ -35,6 +41,8 @@ struct render_buffer
     u32 height;
 };
 
-YK_API void yk_update_and_render_game(struct render_buffer* screen, struct YkInput *input, struct YkGame * game);
+YK_API void yk_innit_game(struct YkGame* game);
+
+YK_API void yk_update_and_render_game(struct render_buffer* screen, struct YkInput *input, struct YkGame * game, f32 delta );
 
 #endif

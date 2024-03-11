@@ -1,8 +1,36 @@
 #include <yk_game.h>
 
-#define speed 15
+#define speed 1
 
-static u32 g_seed = 42;
+internal u32 g_seed = 42;
+
+YK_API void yk_innit_game(struct YkGame *game)
+{
+    game->height = 4;
+    game->width = 4;
+}
+
+void draw_rect(struct render_buffer *screen, u32 minx, u32 miny, u32 maxx, u32 maxy, u32 rgba)
+{
+    minx = (minx < 0) ? 0 : minx;
+    miny = (miny < 0) ? 0 : miny;
+    maxx = (maxx > screen->width) ? screen->width : maxx;
+    maxy = (maxy > screen->height) ? screen->height : maxy;
+
+    // ToDo(facts): store pitch inside render_buffer
+    u8 *row = (u8 *)screen->pixels + miny * (screen->width * 4) + minx * 4;
+
+    for (u32 y = miny; y < maxy; y++)
+    {
+        u32 *pixel = (u32 *)row;
+
+        for (u32 x = minx; x < maxx; x++)
+        {
+            *pixel++ = rgba;
+        }
+        row += screen->width * 4;
+    }
+}
 
 // lcg
 u32 lcg_rand()
@@ -27,47 +55,76 @@ u32 test_rand()
 #endif
 }
 
-YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *input, struct YkGame *game)
+YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta)
 {
+    game->timer += delta;
+
     // update game
     if (input->keys[YK_ACTION_UP] == 1)
     {
-        game->pos_y += speed;
+        if (game->pos_y > 0)
+            game->pos_y -= speed;
     }
     if (input->keys[YK_ACTION_DOWN] == 1)
     {
-        game->pos_y -= speed;
+        if (game->pos_y < screen->height - game->height)
+            game->pos_y += speed;
     }
     if (input->keys[YK_ACTION_LEFT] == 1)
     {
-        game->pos_x += speed;
+        if (game->pos_x > 0)
+            game->pos_x -= speed;
     }
     if (input->keys[YK_ACTION_RIGHT] == 1)
     {
-        game->pos_x -= speed;
+        if (game->pos_x < screen->width - game->width)
+            game->pos_x += speed;
     }
 
-    // render game
-    u32 width = screen->width;
-    u32 height = screen->height;
-    u32 pos_x = game->pos_x;
-    u32 pos_y = game->pos_y;
-    u32 *pixels = screen->pixels;
-
-    for (u32 i = 0; i < height; i++)
+    if (game->timer > 1 / 12.f)
     {
-        u32 posY = i - pos_y;
+        game->timer = 0;
+        u32 width = screen->width;
+        u32 height = screen->height;
+        u32 *pixels = screen->pixels;
 
-        for (u32 j = 0; j < width; j++)
+        for (u32 i = 0; i < height; i++)
         {
-#if 1
-            pixels[width * i + j] = (0xFF << 24) | (test_rand() << 16) | (test_rand() << 8) | test_rand();
-#elif 0
 
-            u32 posX = j - pos_x;
-            pixels[width * i + j] = (0xFF << 24) | ((posX % 256) << 16) | ((0) << 8) | (posY % 256);
+            for (u32 j = 0; j < width; j++)
+            {
+                pixels[width * i + j] = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+            }
+        }
 
-#endif
+        //need alpha blending for this
+       // draw_rect(screen, 0, 0, screen->width / 2, screen->height / 2, 0x000000FF);
+
+        // player
+        draw_rect(screen, game->pos_x, game->pos_y, game->pos_x + game->width, game->pos_y + game->height, 0xFF000000);
+        
+        
+
+    }
+
+    // draw_rect(screen, 4, 4, 10, 10, 0xFF000000);
+
+    // ToDo(facts): Just accept rect. I dont want to do this disco with variables
+    
+    // printf("[%d %d]\n", game->pos_x, game->pos_y);
+
+#if 0
+    if (input->keys[YK_ACTION_HOLD_HANDS] == 1)
+    {
+        for (u32 i = 0; i < height; i++)
+        {
+
+            for (u32 j = 0; j < width; j++)
+            {
+                printf("%d ", screen->pixels[width * i + j]);
+            }
+            printf("\n");
         }
     }
+#endif
 }
