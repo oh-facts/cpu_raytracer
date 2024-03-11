@@ -3,7 +3,6 @@
 
 #include <yk_common.h>
 #include <yk_arena.h>
-#include <yk_math.h>
 
 enum YK_ACTION
 {

@@ -7,10 +7,11 @@ This section is for things I need to work on
 1. oopa
 2. ~~surface blitting (currently I directly render to window surface pixel buffer)~~
 3. ~~Draw Rects~~
-4. alpha blending
-5. hot reload.
-6. weird winmain/main warning I get on windows when compiling
-7. key handling. I wrote more details in the todo there
+4. simd draw rects
+5. alpha blending
+6. hot reload.
+7. weird winmain/main warning I get on windows when compiling
+8. key handling. I wrote more details in the todo there
 
 ## planned features
 
