@@ -10,6 +10,10 @@ YK_API void yk_innit_game(struct YkGame *game)
     game->width = 4;
 }
 
+/*
+    :vomit:
+    my alpha blending was a sin so even though I require an alpha channel. I am not going to use it
+*/
 void draw_rect(struct render_buffer *screen, u32 minx, u32 miny, u32 maxx, u32 maxy, u32 rgba)
 {
     minx = (minx < 0) ? 0 : minx;
@@ -93,24 +97,48 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
 
             for (u32 j = 0; j < width; j++)
             {
+#if 1
+                if (j % 2 == 0)
+                {
+                    u32 randy = test_rand() * 1.5;
+                    pixels[width * i + j] = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+                }
+                else
+                {
+                    pixels[width * i + j] = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+                }
+#elif 0
+                if (j > width / 2)
+                {
+                    u32 randy = test_rand() * 1.5;
+                    pixels[width * i + j] = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+                }
+                else
+                {
+                    pixels[width * i + j] = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+                }
+
+#elif 0
                 pixels[width * i + j] = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+
+#elif 0
+                u32 randy = test_rand() * 1.5;
+                pixels[width * i + j] = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+
+#endif
             }
         }
 
-        //need alpha blending for this
-       // draw_rect(screen, 0, 0, screen->width / 2, screen->height / 2, 0x000000FF);
+        // need alpha blending for this
+        // draw_rect(screen, 0, 0, screen->width / 2, screen->height / 2, 0x000000FF);
 
         // player
-        draw_rect(screen, game->pos_x, game->pos_y, game->pos_x + game->width, game->pos_y + game->height, 0xFF000000);
-        
-        
-
+        // draw_rect(screen, 0 , 0, screen->width, screen->height, 0x09000000);
+        draw_rect(screen, game->pos_x, game->pos_y, game->pos_x + game->width, game->pos_y + game->height, 0xFFFFFFFF);
     }
 
-    // draw_rect(screen, 4, 4, 10, 10, 0xFF000000);
-
     // ToDo(facts): Just accept rect. I dont want to do this disco with variables
-    
+
     // printf("[%d %d]\n", game->pos_x, game->pos_y);
 
 #if 0
