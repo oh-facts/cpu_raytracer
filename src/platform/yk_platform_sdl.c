@@ -185,7 +185,10 @@ int main(int argc, char *argv[])
             // Might fail. Leaving it like this until it doesn't
             // It is possible that my window becomes invalid before
             // I recreate it. I could be wrong about this.
-            SDL_CHECK_RES(SDL_UpdateWindowSurface(win));
+            //SDL_CHECK_RES(SDL_UpdateWindowSurface(win));
+
+            //did fail. removed it.
+            SDL_UpdateWindowSurface(win);
         }
 
         //-------game loop end
