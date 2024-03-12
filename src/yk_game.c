@@ -4,19 +4,46 @@
 
 internal u32 g_seed = 42;
 
+void game_next_level(struct YkGame* game);
+
 YK_API void yk_innit_game(struct YkGame *game)
 {
-    char title[] = "hi hello";
-    memcpy(game->text, title, 9);
+    game->level = -1;
+    game_next_level(game);
+}
 
-    struct snake *snek = &game->snek;
-    snek->size = 5;
-    snek->dir = (v2i){1, 0};
-
-    for (i32 i = 0, size = snek->size; i < size; i++)
+void game_next_level(struct YkGame* game)
+{
+    game->level ++;
+    switch (game->level)
     {
-        snek->pos[i] = (v2i){0, 50};
+        case LEVEL_INTRO:
+        {
+            char title[] = "LOADING";
+            memcpy(game->text, title, sizeof(title));
+        }break;
+        case LEVEL_SNAKE:
+        {
+             struct snake *snek = &game->snek;
+            snek->size = 5;
+            snek->dir = (v2i){1, 0};
+
+            for (i32 i = 0, size = snek->size; i < size; i++)
+            {
+                snek->pos[i] = (v2i){0, 50};
+            }
+
+            char title[] = "SNAKE";
+            memcpy(game->text, title, sizeof(title));
+        }break;
+    
+        default:
+        {
+
+        }break;
     }
+
+
 }
 
 /*
@@ -81,148 +108,171 @@ b8 yk_input_is_key_held(struct YkInput *state, u32 key)
 YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta)
 {
     game->timer += delta;
-    struct snake *snek = &game->snek;
-
-    if (yk_input_is_key_tapped(input, YK_ACTION_UP))
+    switch (game->level)
     {
-        snek->dir = (v2i){0, -1};
-    }
-    if (yk_input_is_key_tapped(input, YK_ACTION_DOWN))
-    {
-        snek->dir = (v2i){0, 1};
-    }
-    if (yk_input_is_key_tapped(input, YK_ACTION_LEFT))
-    {
-        snek->dir = (v2i){-1, 0};
-    }
-    if (yk_input_is_key_tapped(input, YK_ACTION_RIGHT))
-    {
-        snek->dir = (v2i){1, 0};
-    }
-
-    if (yk_input_is_key_tapped(input, YK_ACTION_HOLD_HANDS))
-    {
-        char title[] = "boop";
-        memcpy(game->text, title, 9);
-    }
-
-    // snake position
-    {
-        if ((snek->pos[0].x < screen->width) && snek->pos[0].x >= 0)
+        case LEVEL_INTRO:
         {
-            snek->pos[0].x += snek->dir.x;
-        }
-        else
-        {
-            if (snek->pos[0].x > (i32)screen->width - 1)
+            if(yk_input_is_key_tapped(input,YK_ACTION_UP))
             {
-                snek->pos[0].x = 0;
+                game_next_level(game); 
             }
-            else
-            {
-                snek->pos[0].x = screen->width - 2;
-            }
-        }
 
-        if ((snek->pos[0].y < screen->height) && snek->pos[0].y >= 0)
+        }break;
+        case LEVEL_SNAKE:
         {
-            snek->pos[0].y += snek->dir.y;
-        }
-        else
-        {
-            if (snek->pos[0].y > (i32)screen->height - 1)
+            struct snake *snek = &game->snek;
+
+            if (yk_input_is_key_tapped(input, YK_ACTION_UP))
             {
-                snek->pos[0].y = 0;
+                snek->dir = (v2i){0, -1};
             }
-            else
+            if (yk_input_is_key_tapped(input, YK_ACTION_DOWN))
             {
-                snek->pos[0].y = screen->height - 2;
+                snek->dir = (v2i){0, 1};
             }
-        }
-
-        //    printf("x%d y", snek.posX[0]);
-        //    printf("%d\n", snek.posY[0]);
-    }
-
-    // draw world
-    if (game->timer > 1 / 12.f)
-    {
-        game->timer = 0;
-        u32 width = screen->width;
-        u32 height = screen->height;
-        u32 *pixels = screen->pixels;
-
-        for (u32 i = 0; i < height; i++)
-        {
-            u32 pixel;
-            for (u32 j = 0; j < width; j++)
+            if (yk_input_is_key_tapped(input, YK_ACTION_LEFT))
             {
-#if 0
-                if (j % 2 == 0)
+                snek->dir = (v2i){-1, 0};
+            }
+            if (yk_input_is_key_tapped(input, YK_ACTION_RIGHT))
+            {
+                snek->dir = (v2i){1, 0};
+            }
+
+            if (yk_input_is_key_tapped(input, YK_ACTION_HOLD_HANDS))
+            {
+                char title[] = "boop";
+                memcpy(game->text, title, 9);
+                snek->pos[snek->size] = snek->pos[snek->size - 1];
+                snek->size ++;
+            }
+
+            // snake position
+            {
+                if ((snek->pos[0].x < screen->width) && snek->pos[0].x >= 0)
                 {
-                    u32 randy = test_rand() * 1.5;
-                    pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+                    snek->pos[0].x += snek->dir.x;
                 }
                 else
                 {
-                    pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+                    if (snek->pos[0].x > (i32)screen->width - 1)
+                    {
+                        snek->pos[0].x = 0;
+                    }
+                    else
+                    {
+                        snek->pos[0].x = screen->width - 2;
+                    }
                 }
-#elif 1
-                if (j > width / 2)
+
+                if ((snek->pos[0].y < screen->height) && snek->pos[0].y >= 0)
                 {
-                    u32 randy = test_rand() * 1.5;
-                    pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+                    snek->pos[0].y += snek->dir.y;
                 }
                 else
                 {
-                    pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+                    if (snek->pos[0].y > (i32)screen->height - 1)
+                    {
+                        snek->pos[0].y = 0;
+                    }
+                    else
+                    {
+                        snek->pos[0].y = screen->height - 2;
+                    }
                 }
 
-#elif 0
-                pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+                //    printf("x%d y", snek.posX[0]);
+                //    printf("%d\n", snek.posY[0]);
+            }
 
-#elif 0
-                u32 randy = test_rand() * 1.5;
-                pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+            // draw world
+            if (game->timer > 1 / 12.f)
+            {
+                game->timer = 0;
+                u32 width = screen->width;
+                u32 height = screen->height;
+                u32 *pixels = screen->pixels;
 
-#endif
-
-                // overlay thing
-                // terrible terrible brute forced
+                for (u32 i = 0; i < height; i++)
                 {
-                    u32 overlay = 0x44000000;
+                    u32 pixel;
+                    for (u32 j = 0; j < width; j++)
+                    {
+        #if 0
+                        if (j % 2 == 0)
+                        {
+                            u32 randy = test_rand() * 1.5;
+                            pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+                        }
+                        else
+                        {
+                            pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+                        }
+        #elif 1
+                        if (j > width / 2)
+                        {
+                            u32 randy = test_rand() * 1.5;
+                            pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+                        }
+                        else
+                        {
+                            pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+                        }
 
-                    u8 src_r = (pixel >> 16) & 0xFF;
-                    u8 src_g = (pixel >> 8) & 0xFF;
-                    u8 src_b = pixel & 0xFF;
+        #elif 0
+                        pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
 
-                    u8 dst_r = (overlay >> 16) & 0xFF;
-                    u8 dst_g = (overlay >> 8) & 0xFF;
-                    u8 dst_b = overlay & 0xFF;
-                    u8 dst_a = (overlay >> 24) & 0xFF;
+        #elif 0
+                        u32 randy = test_rand() * 1.5;
+                        pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
 
-                    u8 new_r = (src_r * (255 - dst_a) + dst_r * dst_a) / 255;
-                    u8 new_g = (src_g * (255 - dst_a) + dst_g * dst_a) / 255;
-                    u8 new_b = (src_b * (255 - dst_a) + dst_b * dst_a) / 255;
+        #endif
 
-                    pixel = (0xFF << 24) | (new_r << 16) | (new_g << 8) | new_b;
+                        // overlay thing
+                        // terrible terrible brute forced
+                        {
+                            u32 overlay = 0x44000000;
 
-                    pixels[width * i + j] = pixel;
+                            u8 src_r = (pixel >> 16) & 0xFF;
+                            u8 src_g = (pixel >> 8) & 0xFF;
+                            u8 src_b = pixel & 0xFF;
+
+                            u8 dst_r = (overlay >> 16) & 0xFF;
+                            u8 dst_g = (overlay >> 8) & 0xFF;
+                            u8 dst_b = overlay & 0xFF;
+                            u8 dst_a = (overlay >> 24) & 0xFF;
+
+                            u8 new_r = (src_r * (255 - dst_a) + dst_r * dst_a) / 255;
+                            u8 new_g = (src_g * (255 - dst_a) + dst_g * dst_a) / 255;
+                            u8 new_b = (src_b * (255 - dst_a) + dst_b * dst_a) / 255;
+
+                            pixel = (0xFF << 24) | (new_r << 16) | (new_g << 8) | new_b;
+
+                            pixels[width * i + j] = pixel;
+                        }
+                    }
+                }
+                // draw snake
+                for (u32 i = 0; i < snek->size; i++)
+                {
+                    draw_rect(screen, snek->pos[i].x, snek->pos[i].y, snek->pos[i].x + 4, snek->pos[i].y + 4, 0xFFFFFFFF);
+                }
+
+                // update snake body
+                for (u32 i = snek->size - 1; i > 0; i--)
+                {
+                    snek->pos[i] = snek->pos[i - 1];
                 }
             }
-        }
-        // draw snake
-        for (u32 i = 0; i < snek->size; i++)
+        }break;
+        
+        default:
         {
-            draw_rect(screen, snek->pos[i].x, snek->pos[i].y, snek->pos[i].x + 4, snek->pos[i].y + 4, 0xFFFFFFFF);
-        }
-
-        // update snake body
-        for (u32 i = snek->size - 1; i > 0; i--)
-        {
-            snek->pos[i] = snek->pos[i - 1];
-        }
+            printf("ooga booga why is control here\n");
+        }break;
     }
+   
+    
 
 // stupid debug
 #if 0

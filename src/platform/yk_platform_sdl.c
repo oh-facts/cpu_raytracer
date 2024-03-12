@@ -13,6 +13,8 @@
 #define SDL_CHECK(expr)
 #endif
 
+#define GAME_UPDATE_RATE (1/60.f)
+
 int main(int argc, char *argv[])
 {
     // platform shit starts here ------------------------
@@ -151,7 +153,7 @@ int main(int argc, char *argv[])
             SDL_SetWindowTitle(win,game.text);
             //
 
-            yk_update_and_render_game(&render_target, &input, &game, fixed_dt);
+            yk_update_and_render_game(&render_target, &input, &game, GAME_UPDATE_RATE);
             fixed_dt = 0;
 
             SDL_BlitScaled(render_surface, 0, win_surf, 0);

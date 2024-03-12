@@ -43,12 +43,22 @@ struct snake
     i32 size;
 };
 
+enum LEVEL
+{
+    LEVEL_INTRO,
+    LEVEL_SNAKE,
+};
+
+typedef enum LEVEL LEVEL;
+
 struct YkGame
 {
-    u8* text[10];
+    u8* text[64];
 
     // stage 1
     struct snake snek;
+
+    LEVEL level;
 
     // world
     f32 timer;
