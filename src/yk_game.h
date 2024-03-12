@@ -4,6 +4,18 @@
 #include <yk_common.h>
 #include <yk_arena.h>
 
+union v2i
+{
+    struct
+    {
+        i32 x;
+        i32 y;
+    };
+    i32 e[2];
+};
+
+typedef union v2i v2i;
+
 enum YK_ACTION
 {
     YK_ACTION_HOLD_HANDS = 0,
@@ -19,29 +31,35 @@ typedef enum YK_ACTION YK_ACTION;
 struct YkInput
 {
     b8 keys[YK_ACTION_COUNT];
+    b8 keys_old[YK_ACTION_COUNT];
+};
+
+#define snake_max_size 10
+struct snake
+{
+    v2i pos[snake_max_size];
+    v2i dir;
+    i32 size;
 };
 
 struct YkGame
 {
-    //player data
-    u32 pos_x;
-    u32 pos_y;
-    u32 width;
-    u32 height;
+    // stage 1
+    struct snake snek;
 
-    //world
+    // world
     f32 timer;
 };
 
 struct render_buffer
 {
-    u32* pixels;
+    u32 *pixels;
     u32 width;
     u32 height;
 };
 
-YK_API void yk_innit_game(struct YkGame* game);
+YK_API void yk_innit_game(struct YkGame *game);
 
-YK_API void yk_update_and_render_game(struct render_buffer* screen, struct YkInput *input, struct YkGame * game, f32 delta );
+YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta);
 
 #endif

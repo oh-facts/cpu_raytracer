@@ -54,120 +54,89 @@ int main(int argc, char *argv[])
     SDL_Surface *render_surface = SDL_CreateRGBSurfaceFrom(render_target.pixels, render_target.width, render_target.height, 32, render_target.width * sizeof(u32), 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 
     //--------------------
-    //ugly fullscreen hack.
-    //I dont want to deal with pixel scaling bs.
+    // ugly fullscreen hack.
+    // I dont want to deal with pixel scaling bs.
     u8 isF = 0;
     while (!quit)
     {
         f64 last_time_elapsed = total_time_elapsed;
 
         // ToDo(facts): Move this into a function. I dont want to scroll so much
+
         while (SDL_PollEvent(&event))
         {
             switch (event.type)
             {
-            case SDL_QUIT:
-            {
-                quit = 1;
-            }
-            break;
+                case SDL_QUIT:
+                {
+                    quit = 1;
+                }break;
 
-            // ToDo(facts): Use a ternary operator or make an array of sdl_key_size and update
-            // based on indices. I don't want to maintain two nearly identical
-            // switch cases for input. I just put this together quick so I had something
-            // to play with.
-            case SDL_KEYDOWN:
-            {
-                switch (event.key.keysym.sym)
+                case SDL_KEYUP:
+                case SDL_KEYDOWN:
                 {
-                case SDLK_w:
-                {
-                    input.keys[YK_ACTION_UP] = 1;
-                }
-                break;
-                case SDLK_a:
-                {
-                    input.keys[YK_ACTION_LEFT] = 1;
-                }
-                break;
-                case SDLK_s:
-                {
-                    input.keys[YK_ACTION_DOWN] = 1;
-                }
-                break;
-                case SDLK_d:
-                {
-                    input.keys[YK_ACTION_RIGHT] = 1;
-                }
-                break;
-                case SDLK_F1:
-                {
-                    input.keys[YK_ACTION_HOLD_HANDS] = 1;
-                }
-                break;
-                case SDLK_SPACE:
-                {
-                    if (!isF)
+                    switch (event.key.keysym.sym)
                     {
-                        isF = 1;
-                        SDL_SetWindowFullscreen(win, SDL_WINDOW_FULLSCREEN);
+                        case SDLK_w:
+                        {
+                            input.keys[YK_ACTION_UP] = event.type == SDL_KEYDOWN ? 1 : 0;
+                        }break;
+
+                        case SDLK_a:
+                        {
+                            input.keys[YK_ACTION_LEFT] = event.type == SDL_KEYDOWN ? 1 : 0;
+                        }break;
+
+                        case SDLK_s:
+                        {
+                            input.keys[YK_ACTION_DOWN] = event.type == SDL_KEYDOWN ? 1 : 0;
+                        }break;
+
+                        case SDLK_d:
+                        {
+                            input.keys[YK_ACTION_RIGHT] = event.type == SDL_KEYDOWN ? 1 : 0;
+                        }break;
+
+                        case SDLK_F1:
+                        {
+                            input.keys[YK_ACTION_HOLD_HANDS] = event.type == SDL_KEYDOWN ? 1 : 0;
+                        }break;
+
+                        case SDLK_SPACE:
+                        {
+                            if (event.type == SDL_KEYDOWN)
+                            {
+                                if (!isF)
+                                {
+                                    isF = 1;
+                                    SDL_SetWindowFullscreen(win, SDL_WINDOW_FULLSCREEN);
+                                }
+                                else
+                                {
+                                    isF = 0;
+                                    SDL_SetWindowFullscreen(win, 0);
+                                }
+                            }
+                        }break;
+
+                        case SDLK_q:
+                        {
+                            quit = 1;
+                        }break;
+
+                        default:
+                        {
+
+                        }break;
                     }
-                    else
-                    {
-                        isF = 0;
-                        SDL_SetWindowFullscreen(win, 0);
-                    }
-                }
-                break;
+                    
+                }break;
 
-                default:
-                    break;
-                }
-            }
-            break;
-
-            case SDL_KEYUP:
-            {
-                switch (event.key.keysym.sym)
+                case SDL_WINDOWEVENT:
                 {
-                case SDLK_w:
-                {
-                    input.keys[YK_ACTION_UP] = 0;
-                }
-                break;
-                case SDLK_a:
-                {
-                    input.keys[YK_ACTION_LEFT] = 0;
-                }
-                break;
-                case SDLK_s:
-                {
-                    input.keys[YK_ACTION_DOWN] = 0;
-                }
-                break;
-                case SDLK_d:
-                {
-                    input.keys[YK_ACTION_RIGHT] = 0;
-                }
-                break;
-                case SDLK_F1:
-                {
-                    input.keys[YK_ACTION_HOLD_HANDS] = 0;
-                }
-                break;
-
-                default:
-                    break;
-                }
-            }
-            break;
-
-            case SDL_WINDOWEVENT:
-            {
-                win_surf = SDL_GetWindowSurface(win);
-                SDL_CHECK(win_surf);
-            }
-            break;
+                    win_surf = SDL_GetWindowSurface(win);
+                    SDL_CHECK(win_surf);
+                }break;
             }
         }
 
@@ -185,10 +154,15 @@ int main(int argc, char *argv[])
             // Might fail. Leaving it like this until it doesn't
             // It is possible that my window becomes invalid before
             // I recreate it. I could be wrong about this.
-            //SDL_CHECK_RES(SDL_UpdateWindowSurface(win));
+            // SDL_CHECK_RES(SDL_UpdateWindowSurface(win));
 
-            //did fail. removed it.
+            // did fail. removed it.
             SDL_UpdateWindowSurface(win);
+
+            for (u32 i = 0; i < YK_ACTION_COUNT; i++)
+            {
+                input.keys_old[i] = input.keys[i];
+            }
         }
 
         //-------game loop end

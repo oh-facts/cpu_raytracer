@@ -6,8 +6,15 @@ internal u32 g_seed = 42;
 
 YK_API void yk_innit_game(struct YkGame *game)
 {
-    game->height = 4;
-    game->width = 4;
+    struct snake *snek = &game->snek;
+
+    snek->size = 5;
+    snek->dir = (v2i){1, 0};
+
+    for (i32 i = 0, size = snek->size; i < size; i++)
+    {
+        snek->pos[i] = (v2i){0, 50};
+    }
 }
 
 /*
@@ -59,31 +66,72 @@ u32 test_rand()
 #endif
 }
 
+b8 yk_input_is_key_tapped(struct YkInput *state, u32 key)
+{
+    return state->keys[key] && !state->keys_old[key];
+}
+
+b8 yk_input_is_key_held(struct YkInput *state, u32 key)
+{
+    return state->keys[key];
+}
+
 YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta)
 {
     game->timer += delta;
+    struct snake *snek = &game->snek;
 
-    // update game
-    if (input->keys[YK_ACTION_UP] == 1)
+    if (yk_input_is_key_tapped(input, YK_ACTION_UP))
     {
-        if (game->pos_y > 0)
-            game->pos_y -= speed;
+        snek->dir = (v2i){0, -1};
     }
-    if (input->keys[YK_ACTION_DOWN] == 1)
+    if (yk_input_is_key_tapped(input, YK_ACTION_DOWN))
     {
-        if (game->pos_y < screen->height - game->height)
-            game->pos_y += speed;
+        snek->dir = (v2i){0, 1};
     }
-    if (input->keys[YK_ACTION_LEFT] == 1)
+    if (yk_input_is_key_tapped(input, YK_ACTION_LEFT))
     {
-        if (game->pos_x > 0)
-            game->pos_x -= speed;
+        snek->dir = (v2i){-1, 0};
     }
-    if (input->keys[YK_ACTION_RIGHT] == 1)
+    if (yk_input_is_key_tapped(input, YK_ACTION_RIGHT))
     {
-        if (game->pos_x < screen->width - game->width)
-            game->pos_x += speed;
+        snek->dir = (v2i){1, 0};
     }
+
+    if ((snek->pos[0].x < screen->width) && snek->pos[0].x >= 0)
+    {
+        snek->pos[0].x += snek->dir.x;
+    }
+    else
+    {
+        if (snek->pos[0].x > (i32)screen->width - 1)
+        {
+            snek->pos[0].x = 0;
+        }
+        else
+        {
+            snek->pos[0].x = screen->width - 2;
+        }
+    }
+
+    if ((snek->pos[0].y < screen->height) && snek->pos[0].y >= 0)
+    {
+        snek->pos[0].y += snek->dir.y;
+    }
+    else
+    {
+        if (snek->pos[0].y > (i32)screen->height - 1)
+        {
+            snek->pos[0].y = 0;
+        }
+        else
+        {
+            snek->pos[0].y = screen->height - 2;
+        }
+    }
+
+    //    printf("x%d y", snek.posX[0]);
+    //    printf("%d\n", snek.posY[0]);
 
     if (game->timer > 1 / 12.f)
     {
@@ -134,7 +182,18 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
 
         // player
         // draw_rect(screen, 0 , 0, screen->width, screen->height, 0x09000000);
-        draw_rect(screen, game->pos_x, game->pos_y, game->pos_x + game->width, game->pos_y + game->height, 0xFFFFFFFF);
+        //  snek.posX[0] = game->pos_x;
+        //   snek.posY[0] = game->pos_y;
+
+        for (u32 i = 0; i < snek->size; i++)
+        {
+            draw_rect(screen, snek->pos[i].x, snek->pos[i].y, snek->pos[i].x + 4,  snek->pos[i].y + 4, 0xFFFFFFFF);
+        }
+
+        for (u32 i = snek->size - 1; i > 0; i--)
+        {
+            snek->pos[i] = snek->pos[i-1];
+        }
     }
 
     // ToDo(facts): Just accept rect. I dont want to do this disco with variables
