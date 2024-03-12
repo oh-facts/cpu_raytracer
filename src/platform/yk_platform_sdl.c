@@ -35,6 +35,8 @@ int main(int argc, char *argv[])
     SDL_Event event;
     b8 quit = 0;
 
+    f32 a_ratio = 8 / 6.f;
+
     //-----------------------------platform shit ends here
 
     // game boilerplate
@@ -44,6 +46,7 @@ int main(int argc, char *argv[])
     yk_innit_game(&game);
 
     struct render_buffer render_target = {0};
+    // SDL_GetWindowSize(win, &render_target.height, &render_target.width);
     render_target.height = 60;
     render_target.width = 80;
     render_target.pixels = malloc(sizeof(u32) * render_target.height * render_target.width);
@@ -51,6 +54,9 @@ int main(int argc, char *argv[])
     SDL_Surface *render_surface = SDL_CreateRGBSurfaceFrom(render_target.pixels, render_target.width, render_target.height, 32, render_target.width * sizeof(u32), 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 
     //--------------------
+    //ugly fullscreen hack.
+    //I dont want to deal with pixel scaling bs.
+    u8 isF = 0;
     while (!quit)
     {
         f64 last_time_elapsed = total_time_elapsed;
@@ -99,6 +105,20 @@ int main(int argc, char *argv[])
                     input.keys[YK_ACTION_HOLD_HANDS] = 1;
                 }
                 break;
+                case SDLK_SPACE:
+                {
+                    if (!isF)
+                    {
+                        isF = 1;
+                        SDL_SetWindowFullscreen(win, SDL_WINDOW_FULLSCREEN);
+                    }
+                    else
+                    {
+                        isF = 0;
+                        SDL_SetWindowFullscreen(win, 0);
+                    }
+                }
+                break;
 
                 default:
                     break;
@@ -140,8 +160,15 @@ int main(int argc, char *argv[])
                     break;
                 }
             }
+            break;
+
+            case SDL_WINDOWEVENT:
+            {
+                win_surf = SDL_GetWindowSurface(win);
+                SDL_CHECK(win_surf);
             }
             break;
+            }
         }
 
         // game loop start--------
@@ -154,6 +181,10 @@ int main(int argc, char *argv[])
             fixed_dt = 0;
 
             SDL_BlitScaled(render_surface, 0, win_surf, 0);
+
+            // Might fail. Leaving it like this until it doesn't
+            // It is possible that my window becomes invalid before
+            // I recreate it. I could be wrong about this.
             SDL_CHECK_RES(SDL_UpdateWindowSurface(win));
         }
 
