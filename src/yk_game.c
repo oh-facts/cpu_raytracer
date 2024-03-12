@@ -6,8 +6,10 @@ internal u32 g_seed = 42;
 
 YK_API void yk_innit_game(struct YkGame *game)
 {
-    struct snake *snek = &game->snek;
+    char title[] = "hi hello";
+    memcpy(game->text, title, 9);
 
+    struct snake *snek = &game->snek;
     snek->size = 5;
     snek->dir = (v2i){1, 0};
 
@@ -98,41 +100,51 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
         snek->dir = (v2i){1, 0};
     }
 
-    if ((snek->pos[0].x < screen->width) && snek->pos[0].x >= 0)
+    if (yk_input_is_key_tapped(input, YK_ACTION_HOLD_HANDS))
     {
-        snek->pos[0].x += snek->dir.x;
+        char title[] = "boop";
+        memcpy(game->text, title, 9);
     }
-    else
+
+    // snake position
     {
-        if (snek->pos[0].x > (i32)screen->width - 1)
+        if ((snek->pos[0].x < screen->width) && snek->pos[0].x >= 0)
         {
-            snek->pos[0].x = 0;
+            snek->pos[0].x += snek->dir.x;
         }
         else
         {
-            snek->pos[0].x = screen->width - 2;
+            if (snek->pos[0].x > (i32)screen->width - 1)
+            {
+                snek->pos[0].x = 0;
+            }
+            else
+            {
+                snek->pos[0].x = screen->width - 2;
+            }
         }
-    }
 
-    if ((snek->pos[0].y < screen->height) && snek->pos[0].y >= 0)
-    {
-        snek->pos[0].y += snek->dir.y;
-    }
-    else
-    {
-        if (snek->pos[0].y > (i32)screen->height - 1)
+        if ((snek->pos[0].y < screen->height) && snek->pos[0].y >= 0)
         {
-            snek->pos[0].y = 0;
+            snek->pos[0].y += snek->dir.y;
         }
         else
         {
-            snek->pos[0].y = screen->height - 2;
+            if (snek->pos[0].y > (i32)screen->height - 1)
+            {
+                snek->pos[0].y = 0;
+            }
+            else
+            {
+                snek->pos[0].y = screen->height - 2;
+            }
         }
+
+        //    printf("x%d y", snek.posX[0]);
+        //    printf("%d\n", snek.posY[0]);
     }
 
-    //    printf("x%d y", snek.posX[0]);
-    //    printf("%d\n", snek.posY[0]);
-
+    // draw world
     if (game->timer > 1 / 12.f)
     {
         game->timer = 0;
@@ -142,64 +154,77 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
 
         for (u32 i = 0; i < height; i++)
         {
-
+            u32 pixel;
             for (u32 j = 0; j < width; j++)
             {
-#if 1
+#if 0
                 if (j % 2 == 0)
                 {
                     u32 randy = test_rand() * 1.5;
-                    pixels[width * i + j] = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+                    pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
                 }
                 else
                 {
-                    pixels[width * i + j] = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+                    pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
                 }
-#elif 0
+#elif 1
                 if (j > width / 2)
                 {
                     u32 randy = test_rand() * 1.5;
-                    pixels[width * i + j] = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+                    pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
                 }
                 else
                 {
-                    pixels[width * i + j] = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+                    pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
                 }
 
 #elif 0
-                pixels[width * i + j] = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+                pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
 
 #elif 0
                 u32 randy = test_rand() * 1.5;
-                pixels[width * i + j] = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+                pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
 
 #endif
+
+                // overlay thing
+                // terrible terrible brute forced
+                {
+                    u32 overlay = 0x44000000;
+
+                    u8 src_r = (pixel >> 16) & 0xFF;
+                    u8 src_g = (pixel >> 8) & 0xFF;
+                    u8 src_b = pixel & 0xFF;
+
+                    u8 dst_r = (overlay >> 16) & 0xFF;
+                    u8 dst_g = (overlay >> 8) & 0xFF;
+                    u8 dst_b = overlay & 0xFF;
+                    u8 dst_a = (overlay >> 24) & 0xFF;
+
+                    u8 new_r = (src_r * (255 - dst_a) + dst_r * dst_a) / 255;
+                    u8 new_g = (src_g * (255 - dst_a) + dst_g * dst_a) / 255;
+                    u8 new_b = (src_b * (255 - dst_a) + dst_b * dst_a) / 255;
+
+                    pixel = (0xFF << 24) | (new_r << 16) | (new_g << 8) | new_b;
+
+                    pixels[width * i + j] = pixel;
+                }
             }
         }
-
-        // need alpha blending for this
-        // draw_rect(screen, 0, 0, screen->width / 2, screen->height / 2, 0x000000FF);
-
-        // player
-        // draw_rect(screen, 0 , 0, screen->width, screen->height, 0x09000000);
-        //  snek.posX[0] = game->pos_x;
-        //   snek.posY[0] = game->pos_y;
-
+        // draw snake
         for (u32 i = 0; i < snek->size; i++)
         {
-            draw_rect(screen, snek->pos[i].x, snek->pos[i].y, snek->pos[i].x + 4,  snek->pos[i].y + 4, 0xFFFFFFFF);
+            draw_rect(screen, snek->pos[i].x, snek->pos[i].y, snek->pos[i].x + 4, snek->pos[i].y + 4, 0xFFFFFFFF);
         }
 
+        // update snake body
         for (u32 i = snek->size - 1; i > 0; i--)
         {
-            snek->pos[i] = snek->pos[i-1];
+            snek->pos[i] = snek->pos[i - 1];
         }
     }
 
-    // ToDo(facts): Just accept rect. I dont want to do this disco with variables
-
-    // printf("[%d %d]\n", game->pos_x, game->pos_y);
-
+// stupid debug
 #if 0
     if (input->keys[YK_ACTION_HOLD_HANDS] == 1)
     {

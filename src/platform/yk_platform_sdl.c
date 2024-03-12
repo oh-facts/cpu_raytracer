@@ -146,6 +146,11 @@ int main(int argc, char *argv[])
 
         if (fixed_dt > 1 / 60.f)
         {
+            
+            // bleh bleh bleh make this a fn ptr
+            SDL_SetWindowTitle(win,game.text);
+            //
+
             yk_update_and_render_game(&render_target, &input, &game, fixed_dt);
             fixed_dt = 0;
 

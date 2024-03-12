@@ -36,7 +36,8 @@ struct YkInput
 
 #define snake_max_size 10
 struct snake
-{
+{   
+    // 0 is head
     v2i pos[snake_max_size];
     v2i dir;
     i32 size;
@@ -44,6 +45,8 @@ struct snake
 
 struct YkGame
 {
+    u8* text[10];
+
     // stage 1
     struct snake snek;
 
