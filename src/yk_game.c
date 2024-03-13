@@ -1,10 +1,16 @@
 #include <yk_game.h>
 
+internal u32 g_seed = 42;
+internal u32 test_rand();
+internal u32 lcg_rand();
+
 #define speed 1
 
-internal u32 g_seed = 42;
 
 void game_next_level(struct YkGame* game);
+
+#define num_apple 3
+internal const v2i apples[3] = {{1,1}, {50,43}, {32,55}};
 
 YK_API void yk_innit_game(struct YkGame *game)
 {
@@ -15,11 +21,12 @@ YK_API void yk_innit_game(struct YkGame *game)
 void game_next_level(struct YkGame* game)
 {
     game->level ++;
+    game->timer = 0;
     switch (game->level)
     {
         case LEVEL_INTRO:
         {
-            char title[] = "LOADING";
+            char title[] = "Welcome! This is an automated message to help set up your brand new Television";
             memcpy(game->text, title, sizeof(title));
         }break;
         case LEVEL_SNAKE:
@@ -30,7 +37,7 @@ void game_next_level(struct YkGame* game)
 
             for (i32 i = 0, size = snek->size; i < size; i++)
             {
-                snek->pos[i] = (v2i){0, 50};
+                snek->pos[i] = (v2i){4, 50};
             }
 
             char title[] = "SNAKE";
@@ -45,6 +52,191 @@ void game_next_level(struct YkGame* game)
 
 
 }
+
+
+enum STATIC_MODE
+{
+    STATIC_MODE_BASIC,
+    STATIC_MODE_MIXED,
+    STATIC_MODE_HALF,
+};
+
+typedef enum STATIC_MODE STATIC_MODE;
+
+// For you own sake. Don't look at the code after this line.
+// It is metaprogramming sin.
+// Don't say I didn't say I didn't say I didn't warn ya
+// In a manner of speaking this is max re-usability.
+// We will not speak of this manner.
+// I will whip out a metaprogrammer to split code based on
+// macros. I didn't want an if else inside such hot code for a situation
+// where the if elsing was constant for the function.
+// In fact, after this game jam. After acerola awards me for my ground breaking
+// code and gameplay, I will make something to break code.
+// I did this mostly for fun. It took 20 minutes at best.
+// I don't even know why I am explaining this. Who even reads this stuff
+
+#define _RENDER_STATIC_ONE    \
+    u32 width = screen->width; \
+    u32 height = screen->height; \
+    u32 *pixels = screen->pixels;   \
+    for (u32 i = 0; i < height; i++)    \
+    {                                   \
+        u32 pixel;                      \
+        for (u32 j = 0; j < width; j++) \
+        {                               
+
+
+#define _STATIC_MODE_BASIC \
+    pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+
+#define _STATIC_MODE_MIXED                                                                                 \
+            if (j % 2 == 0)                                                                     \
+            { \
+                u32 randy = test_rand() * 1.5;              \
+                pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;  \
+            }   \
+            else    \
+            {   \
+                pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand(); \
+            }       
+
+#define _STATIC_MODE_HALF \
+            if (j > width / 2)\
+            {\
+                u32 randy = test_rand() * 1.5;\
+                pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;\
+            }\
+            else\
+            {\
+                pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();\
+            }
+
+#define _MODE_4                                                       \
+     u32 randy = test_rand() * 1.5;                                   \
+     pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;   
+
+
+#define _RENDER_STATIC_END        \
+    {\
+                u32 overlay = 0x44000000;\
+\
+                u8 src_r = (pixel >> 16) & 0xFF;\
+                u8 src_g = (pixel >> 8) & 0xFF;\
+                u8 src_b = pixel & 0xFF;\
+\
+                u8 dst_r = (overlay >> 16) & 0xFF;\
+                u8 dst_g = (overlay >> 8) & 0xFF;\
+                u8 dst_b = overlay & 0xFF;\
+                u8 dst_a = (overlay >> 24) & 0xFF;\
+\
+                u8 new_r = (src_r * (255 - dst_a) + dst_r * dst_a) / 255;\
+                u8 new_g = (src_g * (255 - dst_a) + dst_g * dst_a) / 255;\
+                u8 new_b = (src_b * (255 - dst_a) + dst_b * dst_a) / 255;\
+\
+                pixel = (0xFF << 24) | (new_r << 16) | (new_g << 8) | new_b;\
+\
+                pixels[width * i + j] = pixel;\
+            }\
+        }\
+    }
+
+#define RENDER_STATIC(screen, mode) \
+render_static_##mode(screen)
+
+void render_static_STATIC_MODE_BASIC(struct render_buffer * screen)
+{
+    _RENDER_STATIC_ONE
+    _STATIC_MODE_BASIC
+    _RENDER_STATIC_END
+}
+
+void render_static_STATIC_MODE_MIXED(struct render_buffer * screen)
+{
+    _RENDER_STATIC_ONE
+    _STATIC_MODE_MIXED
+    _RENDER_STATIC_END
+}
+
+void render_static_STATIC_MODE_HALF(struct render_buffer * screen)
+{
+    _RENDER_STATIC_ONE
+    _STATIC_MODE_HALF
+    _RENDER_STATIC_END
+}
+
+// metaprogramming sin ends here.
+
+
+/*
+void render_static(struct render_buffer * screen, STATIC_MODE mode)
+{
+
+    u32 width = screen->width;
+    u32 height = screen->height;
+    u32 *pixels = screen->pixels;
+
+    for (u32 i = 0; i < height; i++)
+    {
+        u32 pixel;
+        for (u32 j = 0; j < width; j++)
+        {
+    #if 0
+            if (j % 2 == 0)
+            {
+                u32 randy = test_rand() * 1.5;
+                pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+            }
+            else
+            {
+                pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+            }
+    #elif 1
+            if (j > width / 2)
+            {
+                u32 randy = test_rand() * 1.5;
+                pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+            }
+            else
+            {
+                pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+            }
+
+    #elif 0
+            pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+
+    #elif 0
+            u32 randy = test_rand() * 1.5;
+            pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+
+    #endif
+
+            // overlay thing
+            // terrible terrible brute forced
+            {
+                u32 overlay = 0x44000000;
+
+                u8 src_r = (pixel >> 16) & 0xFF;
+                u8 src_g = (pixel >> 8) & 0xFF;
+                u8 src_b = pixel & 0xFF;
+
+                u8 dst_r = (overlay >> 16) & 0xFF;
+                u8 dst_g = (overlay >> 8) & 0xFF;
+                u8 dst_b = overlay & 0xFF;
+                u8 dst_a = (overlay >> 24) & 0xFF;
+
+                u8 new_r = (src_r * (255 - dst_a) + dst_r * dst_a) / 255;
+                u8 new_g = (src_g * (255 - dst_a) + dst_g * dst_a) / 255;
+                u8 new_b = (src_b * (255 - dst_a) + dst_b * dst_a) / 255;
+
+                pixel = (0xFF << 24) | (new_r << 16) | (new_g << 8) | new_b;
+
+                pixels[width * i + j] = pixel;
+            }
+        }
+    }
+}
+*/
 
 /*
     :vomit:
@@ -72,29 +264,6 @@ void draw_rect(struct render_buffer *screen, u32 minx, u32 miny, u32 maxx, u32 m
     }
 }
 
-// lcg
-u32 lcg_rand()
-{
-    g_seed = 214013 * g_seed + 2531011;
-    return (g_seed >> 16);
-}
-
-/*
-    Testing different rand functions
-    rand() sucks so so hard balls (speedwise)
-    its unbelievable
-*/
-u32 test_rand()
-{
-#if 1
-    return lcg_rand() % 0xFF;
-#endif
-
-#if 0
-    return rand() % 0xFF;
-#endif
-}
-
 b8 yk_input_is_key_tapped(struct YkInput *state, u32 key)
 {
     return state->keys[key] && !state->keys_old[key];
@@ -115,6 +284,11 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
             if(yk_input_is_key_tapped(input,YK_ACTION_UP))
             {
                 game_next_level(game); 
+            }
+            if (game->timer > 1 / 12.f)
+            {
+                game->timer = 0;
+                RENDER_STATIC(screen, STATIC_MODE_BASIC);
             }
 
         }break;
@@ -161,7 +335,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                     }
                     else
                     {
-                        snek->pos[0].x = screen->width - 2;
+                        snek->pos[0].x = screen->width - 1;
                     }
                 }
 
@@ -177,7 +351,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                     }
                     else
                     {
-                        snek->pos[0].y = screen->height - 2;
+                        snek->pos[0].y = screen->height - 1;
                     }
                 }
 
@@ -189,69 +363,16 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
             if (game->timer > 1 / 12.f)
             {
                 game->timer = 0;
-                u32 width = screen->width;
-                u32 height = screen->height;
-                u32 *pixels = screen->pixels;
 
-                for (u32 i = 0; i < height; i++)
+                //draw my life
+                RENDER_STATIC(screen, STATIC_MODE_MIXED);
+
+                //draw apples
+                for(u32 i = 0; i < num_apple; i ++)
                 {
-                    u32 pixel;
-                    for (u32 j = 0; j < width; j++)
-                    {
-        #if 0
-                        if (j % 2 == 0)
-                        {
-                            u32 randy = test_rand() * 1.5;
-                            pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
-                        }
-                        else
-                        {
-                            pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
-                        }
-        #elif 1
-                        if (j > width / 2)
-                        {
-                            u32 randy = test_rand() * 1.5;
-                            pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
-                        }
-                        else
-                        {
-                            pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
-                        }
-
-        #elif 0
-                        pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
-
-        #elif 0
-                        u32 randy = test_rand() * 1.5;
-                        pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
-
-        #endif
-
-                        // overlay thing
-                        // terrible terrible brute forced
-                        {
-                            u32 overlay = 0x44000000;
-
-                            u8 src_r = (pixel >> 16) & 0xFF;
-                            u8 src_g = (pixel >> 8) & 0xFF;
-                            u8 src_b = pixel & 0xFF;
-
-                            u8 dst_r = (overlay >> 16) & 0xFF;
-                            u8 dst_g = (overlay >> 8) & 0xFF;
-                            u8 dst_b = overlay & 0xFF;
-                            u8 dst_a = (overlay >> 24) & 0xFF;
-
-                            u8 new_r = (src_r * (255 - dst_a) + dst_r * dst_a) / 255;
-                            u8 new_g = (src_g * (255 - dst_a) + dst_g * dst_a) / 255;
-                            u8 new_b = (src_b * (255 - dst_a) + dst_b * dst_a) / 255;
-
-                            pixel = (0xFF << 24) | (new_r << 16) | (new_g << 8) | new_b;
-
-                            pixels[width * i + j] = pixel;
-                        }
-                    }
+                    draw_rect(screen, apples[i].x, apples[i].y, apples[i].x + 1, apples[i].y + 1, 0xFFFFFFFF);
                 }
+
                 // draw snake
                 for (u32 i = 0; i < snek->size; i++)
                 {
@@ -290,3 +411,27 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
     }
 #endif
 }
+
+// lcg
+u32 lcg_rand()
+{
+    g_seed = 214013 * g_seed + 2531011;
+    return (g_seed >> 16);
+}
+
+/*
+    Testing different rand functions
+    rand() sucks so so hard balls (speedwise)
+    its unbelievable
+*/
+u32 test_rand()
+{
+#if 1
+    return lcg_rand() % 0xFF;
+#endif
+
+#if 0
+    return rand() % 0xFF;
+#endif
+}
+

@@ -53,7 +53,7 @@ typedef enum LEVEL LEVEL;
 
 struct YkGame
 {
-    u8* text[64];
+    u8* text[512];
 
     // stage 1
     struct snake snek;
