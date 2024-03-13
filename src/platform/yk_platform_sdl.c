@@ -6,14 +6,52 @@
 #define DEBUG_SDL_CHECK 1
 
 #if DEBUG_SDL_CHECK
-#define SDL_CHECK_RES(res) _Assert_helper(res == 0, "%s", SDL_GetError())
-#define SDL_CHECK(expr) _Assert_helper(expr, "%s", SDL_GetError())
+    #define SDL_CHECK_RES(res) _Assert_helper(res == 0, "[SDL Assert is Failure]\n%s", SDL_GetError())
+    #define SDL_CHECK(expr) _Assert_helper(expr, "[SDL Assert is Failure]\n%s", SDL_GetError())
 #else
-#define SDL_CHECK_RES(expr) expr
-#define SDL_CHECK(expr)
+    #define SDL_CHECK_RES(expr) expr
+    #define SDL_CHECK(expr)
 #endif
 
 #define GAME_UPDATE_RATE (1/60.f)
+
+/*
+    returns 0 if audio is invalid
+*/
+u32 sdl_load_audio(const char* name)
+{
+    SDL_AudioSpec wavSpec;
+    u32 wavLength;
+    u8* wavBuffer;
+
+    {
+        SDL_AudioSpec* temp = SDL_LoadWAV(name, &wavSpec, &wavBuffer, &wavLength);
+        if(temp == 0)
+        {
+            printf("Audio file %s not found.", name);
+            return 0;
+        }
+    }
+        
+
+    SDL_AudioDeviceID deviceId = SDL_OpenAudioDevice(NULL, 0, &wavSpec, NULL, 0);
+    SDL_CHECK(deviceId);
+
+    SDL_CHECK_RES(SDL_QueueAudio(deviceId, wavBuffer, wavLength));
+
+    return deviceId;
+}
+
+void sdl_play_audio(u32 id)
+{
+    if(id == 0) { return;}
+    SDL_PauseAudioDevice(id, 0);
+}
+
+void sdl_set_title(void* win, const char* title)
+{
+    SDL_SetWindowTitle(win, title);
+}
 
 int main(int argc, char *argv[])
 {
@@ -22,7 +60,7 @@ int main(int argc, char *argv[])
     f64 total_time_elapsed = 0;
     f64 dt = 0;
 
-    SDL_CHECK_RES(SDL_Init(SDL_INIT_VIDEO));
+    SDL_CHECK_RES(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO));
 
     SDL_Window *win = SDL_CreateWindow(
         "television",
@@ -45,6 +83,13 @@ int main(int argc, char *argv[])
     struct YkInput input = {0};
 
     struct YkGame game = {0};
+    
+    //platform
+    game._win = win;
+    game.platform_play_audio = sdl_play_audio;
+    game.platform_load_audio = sdl_load_audio;
+    game.platform_set_title = sdl_set_title;
+
     yk_innit_game(&game);
 
     struct render_buffer render_target = {0};
@@ -79,21 +124,25 @@ int main(int argc, char *argv[])
                 {
                     switch (event.key.keysym.sym)
                     {
+                        case SDLK_UP:
                         case SDLK_w:
                         {
                             input.keys[YK_ACTION_UP] = event.type == SDL_KEYDOWN ? 1 : 0;
                         }break;
 
+                        case SDLK_LEFT:
                         case SDLK_a:
                         {
                             input.keys[YK_ACTION_LEFT] = event.type == SDL_KEYDOWN ? 1 : 0;
                         }break;
 
+                        case SDLK_DOWN:
                         case SDLK_s:
                         {
                             input.keys[YK_ACTION_DOWN] = event.type == SDL_KEYDOWN ? 1 : 0;
                         }break;
 
+                        case SDLK_RIGHT:
                         case SDLK_d:
                         {
                             input.keys[YK_ACTION_RIGHT] = event.type == SDL_KEYDOWN ? 1 : 0;
@@ -153,10 +202,6 @@ int main(int argc, char *argv[])
         if (fixed_dt > 1 / 60.f)
         {
             
-            // bleh bleh bleh make this a fn ptr
-            SDL_SetWindowTitle(win,game.text);
-            //
-
             yk_update_and_render_game(&render_target, &input, &game, GAME_UPDATE_RATE);
             fixed_dt = 0;
 

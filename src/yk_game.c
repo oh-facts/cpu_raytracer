@@ -19,9 +19,12 @@ void _render_static_STATIC_MODE_MIXED(struct render_buffer * screen);
 #define num_apple 3
 internal const v2i apples[3] = {{1,1}, {50,43}, {32,55}};
 
+internal const v2i loading_bar = (v2i){4, 50};
+
 
 YK_API void yk_innit_game(struct YkGame *game)
 {
+    game->songs[0] = game->platform_load_audio("../res/song0.wav");
     game->level = 0;
     load_level(game);
 }
@@ -34,22 +37,23 @@ void load_level(struct YkGame* game)
         case LEVEL_INTRO:
         {;
             game->message_index = 0;
-            memcpy(game->text, messages[game->message_index], strlen(messages[game->message_index]));
+            game->platform_set_title(game->_win, messages[game->message_index]);
+            game->loading_bar = loading_bar;
             game->message_index ++;
         }break;
         case LEVEL_SNAKE:
         {
             game->message_index = NUM_MSG_1;
             struct snake *snek = &game->snek;
-            snek->size = 5;
+            snek->size = 1;
             snek->dir = (v2i){1, 0};
 
             for (i32 i = 0, size = snek->size; i < size; i++)
             {
-                snek->pos[i] = (v2i){4, 50};
+                snek->pos[i] = loading_bar;
             }
-            memset(game->text,0,MAX_MSG_LEN);
-            memcpy(game->text, messages[game->message_index], strlen(messages[game->message_index]));
+            game->platform_set_title(game->_win,messages[game->message_index]);
+
         }break;
     
         default:
@@ -114,16 +118,20 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
     {
         case LEVEL_INTRO:
         {
+            game->loading_bar.x = game->loading_bar.x < screen->width ? game->loading_bar.x + 1 : 0;
             if(yk_input_is_key_tapped(input,YK_ACTION_ACCEPT))
             {
+                if(game->message_index == NUM_MSG_1 - 1)
+                {
+                    game->platform_play_audio(game->songs[0]);
+                }
                 if(game->message_index > NUM_MSG_1 - 1)
                 {
                     game->level ++;
                     load_level(game);
                 }
 
-                memset(game->text,0, MAX_MSG_LEN);
-                memcpy(game->text, messages[game->message_index], strlen(messages[game->message_index]));
+                game->platform_set_title(game->_win,messages[game->message_index]);
                 game->message_index++;
 
             }
@@ -131,6 +139,14 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
             {
                 game->timer = 0;
                 RENDER_STATIC(screen, STATIC_MODE_BASIC);
+
+                //loading bar
+                if(game->message_index > 3)
+                {
+                    v2i _lb = game->loading_bar;
+                    draw_rect(screen, _lb.x ,_lb.y, _lb.x + 4, _lb.y + 4, 0xFFFFFFFF);
+                }
+                
             }
 
         }break;
@@ -157,8 +173,6 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
 
             if (yk_input_is_key_tapped(input, YK_ACTION_HOLD_HANDS))
             {
-                char title[] = "boop";
-                memcpy(game->text, title, 9);
                 snek->pos[snek->size] = snek->pos[snek->size - 1];
                 snek->size ++;
             }

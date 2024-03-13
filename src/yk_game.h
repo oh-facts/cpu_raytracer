@@ -55,7 +55,7 @@ typedef enum LEVEL LEVEL;
 
 #define MAX_MSG_LEN 128
 
-#define NUM_MSG_1 (5)
+#define NUM_MSG_1 (6)
 #define NUM_MSG_2 (5)
 
 #define NUM_MSG (NUM_MSG_1 + NUM_MSG_2)
@@ -64,17 +64,18 @@ const char* messages[NUM_MSG] = {
 "Welcome! This is a scripted sequence to help you get started. Press the ENTER button on your remote",
 "Warning: Prolonged exposure to the Dear Dear Home System can lead to mild nausea, and in some cases loss of life",
 "In most cases, loss of loved ones, and in rare cases, loss of self being. Proceed with caution",
-"The DDHS will now look for channels on your local network.",
+"The DDHS will now look for channels on your local network. This will take a while",
 "Please don't leave",
-"Loading ..."
+"Here is a song I wrote (for occasions like these)",
+"Loading ...",
+"You can't eat that pixel. It is dead. I am dying.",
 };
 
 struct YkGame
 {
-    char text[MAX_MSG_LEN];
-
-    //intro stage;
+    // stage 0;
     u8 message_index;
+    v2i loading_bar;
 
     // stage 1
     struct snake snek;
@@ -83,6 +84,13 @@ struct YkGame
 
     // world
     f32 timer;
+    u32 songs[2];
+
+    //platform
+    void * _win;
+    u32  (*platform_load_audio)(const char* audio_name);
+    void (*platform_play_audio)(u32 id);
+    void (*platform_set_title)(void * win, const char* title);
 };
 
 struct render_buffer
