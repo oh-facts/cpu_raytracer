@@ -20,8 +20,8 @@ This section is for big picture things I plan to add eventually
 ### general
 
 **meta programmer**
-I want to be able to use annotations like @compile_time. So I need to make a parser to make sense
-of annotations. I tried it before but it was shit because it started out as something else that
-I later decided to make into a meta programmer. I want this mainly for reflection.
+I want to be able to break code based on macros. Sometimes I use macros inside functions.
+Sometimes these functions are hot code. I can macro abuse but I would like to make
+something to break code in a sane way.
 
 <!-- //ctrl shift v (my vscode md viewer plugin keybind) -->
