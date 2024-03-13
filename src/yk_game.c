@@ -28,17 +28,18 @@ YK_API void yk_innit_game(struct YkGame *game)
 
 void load_level(struct YkGame* game)
 {
-    game->message_index = 0;
     game->timer = 0;
     switch (game->level)
     {
         case LEVEL_INTRO:
         {;
+            game->message_index = 0;
             memcpy(game->text, messages[game->message_index], strlen(messages[game->message_index]));
             game->message_index ++;
         }break;
         case LEVEL_SNAKE:
         {
+            game->message_index = NUM_MSG_1;
             struct snake *snek = &game->snek;
             snek->size = 5;
             snek->dir = (v2i){1, 0};
@@ -47,9 +48,8 @@ void load_level(struct YkGame* game)
             {
                 snek->pos[i] = (v2i){4, 50};
             }
-
-            char title[] = "SNAKE";
-            memcpy(game->text, title, sizeof(title));
+            memset(game->text,0,MAX_MSG_LEN);
+            memcpy(game->text, messages[game->message_index], strlen(messages[game->message_index]));
         }break;
     
         default:
@@ -116,7 +116,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
         {
             if(yk_input_is_key_tapped(input,YK_ACTION_ACCEPT))
             {
-                if(game->message_index > NUM_MSG - 1)
+                if(game->message_index > NUM_MSG_1 - 1)
                 {
                     game->level ++;
                     load_level(game);

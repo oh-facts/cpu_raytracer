@@ -54,7 +54,11 @@ enum LEVEL
 typedef enum LEVEL LEVEL;
 
 #define MAX_MSG_LEN 128
-#define NUM_MSG 5
+
+#define NUM_MSG_1 (5)
+#define NUM_MSG_2 (5)
+
+#define NUM_MSG (NUM_MSG_1 + NUM_MSG_2)
 
 const char* messages[NUM_MSG] = {
 "Welcome! This is a scripted sequence to help you get started. Press the ENTER button on your remote",
@@ -62,6 +66,7 @@ const char* messages[NUM_MSG] = {
 "In most cases, loss of loved ones, and in rare cases, loss of self being. Proceed with caution",
 "The DDHS will now look for channels on your local network.",
 "Please don't leave",
+"Loading ..."
 };
 
 struct YkGame
