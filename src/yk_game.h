@@ -23,7 +23,9 @@ enum YK_ACTION
     YK_ACTION_DOWN,
     YK_ACTION_LEFT,
     YK_ACTION_RIGHT,
-    YK_ACTION_COUNT
+    YK_ACTION_ACCEPT,
+
+    YK_ACTION_COUNT,
 };
 
 typedef enum YK_ACTION YK_ACTION;
@@ -51,9 +53,23 @@ enum LEVEL
 
 typedef enum LEVEL LEVEL;
 
+#define MAX_MSG_LEN 128
+#define NUM_MSG 5
+
+const char* messages[NUM_MSG] = {
+"Welcome! This is a scripted sequence to help you get started. Press the ENTER button on your remote",
+"Warning: Prolonged exposure to the Dear Dear Home System can lead to mild nausea, and in some cases loss of life",
+"In most cases, loss of loved ones, and in rare cases, loss of self being. Proceed with caution",
+"The DDHS will now look for channels on your local network.",
+"Please don't leave",
+};
+
 struct YkGame
 {
-    u8* text[512];
+    char text[MAX_MSG_LEN];
+
+    //intro stage;
+    u8 message_index;
 
     // stage 1
     struct snake snek;

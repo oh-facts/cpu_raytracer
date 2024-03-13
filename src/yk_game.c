@@ -5,40 +5,41 @@ internal u32 test_rand();
 internal u32 lcg_rand();
 
 #define speed 1
+#include <string.h>
 
-
-void game_next_level(struct YkGame* game);
+void load_level(struct YkGame* game);
 
 #define RENDER_STATIC(screen, mode) \
-render_static_##mode(screen)
+_render_static_##mode(screen)
 
-void render_static_STATIC_MODE_BASIC(struct render_buffer * screen);
-void render_static_STATIC_MODE_HALF(struct render_buffer * screen);
-void render_static_STATIC_MODE_MIXED(struct render_buffer * screen);
+void _render_static_STATIC_MODE_BASIC(struct render_buffer * screen);
+void _render_static_STATIC_MODE_HALF(struct render_buffer * screen);
+void _render_static_STATIC_MODE_MIXED(struct render_buffer * screen);
 
 #define num_apple 3
 internal const v2i apples[3] = {{1,1}, {50,43}, {32,55}};
 
+
 YK_API void yk_innit_game(struct YkGame *game)
 {
-    game->level = -1;
-    game_next_level(game);
+    game->level = 0;
+    load_level(game);
 }
 
-void game_next_level(struct YkGame* game)
+void load_level(struct YkGame* game)
 {
-    game->level ++;
+    game->message_index = 0;
     game->timer = 0;
     switch (game->level)
     {
         case LEVEL_INTRO:
-        {
-            char title[] = "Welcome! This is an automated message to help set up your brand new Television";
-            memcpy(game->text, title, sizeof(title));
+        {;
+            memcpy(game->text, messages[game->message_index], strlen(messages[game->message_index]));
+            game->message_index ++;
         }break;
         case LEVEL_SNAKE:
         {
-             struct snake *snek = &game->snek;
+            struct snake *snek = &game->snek;
             snek->size = 5;
             snek->dir = (v2i){1, 0};
 
@@ -69,76 +70,6 @@ enum STATIC_MODE
 };
 
 typedef enum STATIC_MODE STATIC_MODE;
-
-/*
-void render_static(struct render_buffer * screen, STATIC_MODE mode)
-{
-
-    u32 width = screen->width;
-    u32 height = screen->height;
-    u32 *pixels = screen->pixels;
-
-    for (u32 i = 0; i < height; i++)
-    {
-        u32 pixel;
-        for (u32 j = 0; j < width; j++)
-        {
-    #if 0
-            if (j % 2 == 0)
-            {
-                u32 randy = test_rand() * 1.5;
-                pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
-            }
-            else
-            {
-                pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
-            }
-    #elif 1
-            if (j > width / 2)
-            {
-                u32 randy = test_rand() * 1.5;
-                pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
-            }
-            else
-            {
-                pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
-            }
-
-    #elif 0
-            pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
-
-    #elif 0
-            u32 randy = test_rand() * 1.5;
-            pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
-
-    #endif
-
-            // overlay thing
-            // terrible terrible brute forced
-            {
-                u32 overlay = 0x44000000;
-
-                u8 src_r = (pixel >> 16) & 0xFF;
-                u8 src_g = (pixel >> 8) & 0xFF;
-                u8 src_b = pixel & 0xFF;
-
-                u8 dst_r = (overlay >> 16) & 0xFF;
-                u8 dst_g = (overlay >> 8) & 0xFF;
-                u8 dst_b = overlay & 0xFF;
-                u8 dst_a = (overlay >> 24) & 0xFF;
-
-                u8 new_r = (src_r * (255 - dst_a) + dst_r * dst_a) / 255;
-                u8 new_g = (src_g * (255 - dst_a) + dst_g * dst_a) / 255;
-                u8 new_b = (src_b * (255 - dst_a) + dst_b * dst_a) / 255;
-
-                pixel = (0xFF << 24) | (new_r << 16) | (new_g << 8) | new_b;
-
-                pixels[width * i + j] = pixel;
-            }
-        }
-    }
-}
-*/
 
 /*
     :vomit:
@@ -183,9 +114,18 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
     {
         case LEVEL_INTRO:
         {
-            if(yk_input_is_key_tapped(input,YK_ACTION_UP))
+            if(yk_input_is_key_tapped(input,YK_ACTION_ACCEPT))
             {
-                game_next_level(game); 
+                if(game->message_index > NUM_MSG - 1)
+                {
+                    game->level ++;
+                    load_level(game);
+                }
+
+                memset(game->text,0, MAX_MSG_LEN);
+                memcpy(game->text, messages[game->message_index], strlen(messages[game->message_index]));
+                game->message_index++;
+
             }
             if (game->timer > 1 / 12.f)
             {
@@ -418,21 +358,21 @@ u32 test_rand()
 
 
 
-void render_static_STATIC_MODE_BASIC(struct render_buffer * screen)
+void _render_static_STATIC_MODE_BASIC(struct render_buffer * screen)
 {
     _RENDER_STATIC_ONE
     _STATIC_MODE_BASIC
     _RENDER_STATIC_END
 }
 
-void render_static_STATIC_MODE_MIXED(struct render_buffer * screen)
+void _render_static_STATIC_MODE_MIXED(struct render_buffer * screen)
 {
     _RENDER_STATIC_ONE
     _STATIC_MODE_MIXED
     _RENDER_STATIC_END
 }
 
-void render_static_STATIC_MODE_HALF(struct render_buffer * screen)
+void _render_static_STATIC_MODE_HALF(struct render_buffer * screen)
 {
     _RENDER_STATIC_ONE
     _STATIC_MODE_HALF
@@ -441,3 +381,73 @@ void render_static_STATIC_MODE_HALF(struct render_buffer * screen)
 
 // metaprogramming sin ends here.
 
+
+/*
+void render_static(struct render_buffer * screen, STATIC_MODE mode)
+{
+
+    u32 width = screen->width;
+    u32 height = screen->height;
+    u32 *pixels = screen->pixels;
+
+    for (u32 i = 0; i < height; i++)
+    {
+        u32 pixel;
+        for (u32 j = 0; j < width; j++)
+        {
+    #if 0
+            if (j % 2 == 0)
+            {
+                u32 randy = test_rand() * 1.5;
+                pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+            }
+            else
+            {
+                pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+            }
+    #elif 1
+            if (j > width / 2)
+            {
+                u32 randy = test_rand() * 1.5;
+                pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+            }
+            else
+            {
+                pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+            }
+
+    #elif 0
+            pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+
+    #elif 0
+            u32 randy = test_rand() * 1.5;
+            pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
+
+    #endif
+
+            // overlay thing
+            // terrible terrible brute forced
+            {
+                u32 overlay = 0x44000000;
+
+                u8 src_r = (pixel >> 16) & 0xFF;
+                u8 src_g = (pixel >> 8) & 0xFF;
+                u8 src_b = pixel & 0xFF;
+
+                u8 dst_r = (overlay >> 16) & 0xFF;
+                u8 dst_g = (overlay >> 8) & 0xFF;
+                u8 dst_b = overlay & 0xFF;
+                u8 dst_a = (overlay >> 24) & 0xFF;
+
+                u8 new_r = (src_r * (255 - dst_a) + dst_r * dst_a) / 255;
+                u8 new_g = (src_g * (255 - dst_a) + dst_g * dst_a) / 255;
+                u8 new_b = (src_b * (255 - dst_a) + dst_b * dst_a) / 255;
+
+                pixel = (0xFF << 24) | (new_r << 16) | (new_g << 8) | new_b;
+
+                pixels[width * i + j] = pixel;
+            }
+        }
+    }
+}
+*/

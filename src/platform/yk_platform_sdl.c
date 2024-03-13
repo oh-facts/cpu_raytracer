@@ -103,8 +103,12 @@ int main(int argc, char *argv[])
                         {
                             input.keys[YK_ACTION_HOLD_HANDS] = event.type == SDL_KEYDOWN ? 1 : 0;
                         }break;
+                        case SDLK_RETURN:
+                        {
+                            input.keys[YK_ACTION_ACCEPT] = event.type == SDL_KEYDOWN ? 1 : 0;
+                        }break;
 
-                        case SDLK_SPACE:
+                        case SDLK_F2:
                         {
                             if (event.type == SDL_KEYDOWN)
                             {
