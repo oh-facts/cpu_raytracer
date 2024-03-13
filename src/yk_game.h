@@ -45,6 +45,15 @@ struct snake
     i32 size;
 };
 
+enum SNAKE_WAVE
+{
+    SNAKE_WAVE_1,
+    SNAKE_WAVE_2,
+    SNAKE_WAVE_NUM,
+};
+
+typedef enum SNAKE_WAVE SNAKE_WAVE;
+
 enum LEVEL
 {
     LEVEL_INTRO,
@@ -55,34 +64,59 @@ typedef enum LEVEL LEVEL;
 
 #define MAX_MSG_LEN 128
 
-#define NUM_MSG_1 (6)
-#define NUM_MSG_2 (5)
+
+#define MSG_L1S1     (0)
+#define MSG_L2S1     (6)
+#define MSG_L2S2     (7)
+
 
 #define NUM_MSG (NUM_MSG_1 + NUM_MSG_2)
 
-const char* messages[NUM_MSG] = {
+const char* messages[25] = {
 "Welcome! This is a scripted sequence to help you get started. Press the ENTER button on your remote",
 "Warning: Prolonged exposure to the Dear Dear Home System can lead to mild nausea, and in some cases loss of life",
 "In most cases, loss of loved ones, and in rare cases, loss of self being. Proceed with caution",
 "The DDHS will now look for channels on your local network. This will take a while",
 "Please don't leave",
 "Here is a song I wrote (for occasions like these)",
+
 "Loading ...",
-"You can't eat that pixel. It is dead. I am dying.",
+"Loading Faster !",
+"Loading at record speed!",
+"You can't eat that pixel. It is dead.",
+"I don't know how to find channels",
+"But I can play music.",
+"You can't eat that pixel. It is dead. I am dying",
+"Please stop eating pixels"
+// this goes on till everything is black because pixels keep generating.
+// And then you explore the puzzle
+// But you will grow small and die if you don't eat pixels so you must eat pixels
+// I will communicate with flashing red
+// No No No
+// you eat pixels. you get bigger in size. then they disappear. then you go back to horizontal
+// way and then it says, "loading faster"
+// more pixels appear
+// "loading very fast"
+// more pixels
+// can't eat anymore
+// i'm dying
+// can't cross self perhaps either?
 };
 
 struct YkGame
 {
     // stage 0;
-    u8 message_index;
     v2i loading_bar;
 
     // stage 1
     struct snake snek;
+    u32 eaten;
+    SNAKE_WAVE wave;
 
     LEVEL level;
 
     // world
+    u8 message_index;
     f32 timer;
     u32 songs[2];
 

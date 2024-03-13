@@ -12,15 +12,51 @@ void load_level(struct YkGame* game);
 #define RENDER_STATIC(screen, mode) \
 _render_static_##mode(screen)
 
-void _render_static_STATIC_MODE_BASIC(struct render_buffer * screen);
-void _render_static_STATIC_MODE_HALF(struct render_buffer * screen);
-void _render_static_STATIC_MODE_MIXED(struct render_buffer * screen);
+internal void _render_static_STATIC_MODE_BASIC(struct render_buffer * screen);
+internal void _render_static_STATIC_MODE_HALF(struct render_buffer * screen);
+internal void _render_static_STATIC_MODE_MIXED(struct render_buffer * screen);
 
-#define num_apple 3
-internal const v2i apples[3] = {{1,1}, {50,43}, {32,55}};
+#define MAX_APPLES 10
+internal v2i apples[MAX_APPLES] = {};
+internal const u32 apple_num_index[SNAKE_WAVE_NUM] = {5,3};
+
+internal void reset_apples(u32 width, u32 height)
+{
+    for(u32 i = 0; i < MAX_APPLES; i ++)
+    {
+        apples[i] = (v2i){-1, -1};
+    }
+}
+
+internal void randomise_apples(u32 width, u32 height, u32 num)
+{
+    for(u32 i = 0; i < num; i ++)
+    {
+        apples[i] = (v2i){lcg_rand() % width,lcg_rand() % height};
+    }
+}
 
 internal const v2i loading_bar = (v2i){4, 50};
 
+internal void snake_apple_collision(struct YkGame* game, const u32 apple_num)
+{
+    struct snake *snek = &game->snek;
+    // check and eat apple. using broadphase SAT AABB. Might optmize with quadtrees
+    for(u32 i = 0; i < apple_num; i ++)
+    {
+        if((abs(snek->pos[0].x - apples[i].x) < 4) && ((abs(snek->pos[0].y - apples[i].y) < 4)))
+        {
+            
+            apples[i].x = -1; //lcg_rand() % screen->width;
+            apples[i].y = -1; //lcg_rand() % screen->height;
+
+            snek->pos[snek->size] = snek->pos[snek->size - 1];
+            snek->size ++;
+            game->eaten ++;
+            //printf("Gulp %d\n",i);
+        }
+    }
+}
 
 YK_API void yk_innit_game(struct YkGame *game)
 {
@@ -36,14 +72,16 @@ void load_level(struct YkGame* game)
     {
         case LEVEL_INTRO:
         {;
-            game->message_index = 0;
+            game->message_index = MSG_L1S1;
             game->platform_set_title(game->_win, messages[game->message_index]);
             game->loading_bar = loading_bar;
             game->message_index ++;
         }break;
         case LEVEL_SNAKE:
         {
-            game->message_index = NUM_MSG_1;
+            reset_apples(80,60);
+            randomise_apples(80, 60, apple_num_index[game->wave]);
+            game->message_index = MSG_L2S1;
             struct snake *snek = &game->snek;
             snek->size = 1;
             snek->dir = (v2i){1, 0};
@@ -121,12 +159,9 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
             game->loading_bar.x = game->loading_bar.x < screen->width ? game->loading_bar.x + 1 : 0;
             if(yk_input_is_key_tapped(input,YK_ACTION_ACCEPT))
             {
-                if(game->message_index == NUM_MSG_1 - 1)
+                if(game->message_index == MSG_L2S1 - 1)
                 {
                     game->platform_play_audio(game->songs[0]);
-                }
-                if(game->message_index > NUM_MSG_1 - 1)
-                {
                     game->level ++;
                     load_level(game);
                 }
@@ -170,12 +205,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
             {
                 snek->dir = (v2i){1, 0};
             }
-
-            if (yk_input_is_key_tapped(input, YK_ACTION_HOLD_HANDS))
-            {
-                snek->pos[snek->size] = snek->pos[snek->size - 1];
-                snek->size ++;
-            }
+            printf("%d\n",game->wave);
 
             // snake position
             {
@@ -215,7 +245,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                 //    printf("%d\n", snek.posY[0]);
             }
 
-            // draw world
+            // sim world
             if (game->timer > 1 / 12.f)
             {
                 game->timer = 0;
@@ -224,9 +254,9 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                 RENDER_STATIC(screen, STATIC_MODE_MIXED);
 
                 //draw apples
-                for(u32 i = 0; i < num_apple; i ++)
+                for(u32 i = 0; i < MAX_APPLES; i ++)
                 {
-                    draw_rect(screen, apples[i].x, apples[i].y, apples[i].x + 1, apples[i].y + 1, 0xFFFFFFFF);
+                    draw_rect(screen, apples[i].x, apples[i].y, apples[i].x + 2, apples[i].y + 2, 0xFFFFFFFF);
                 }
 
                 // draw snake
@@ -240,7 +270,51 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                 {
                     snek->pos[i] = snek->pos[i - 1];
                 }
+
+                
+                if((game->eaten > apple_num_index[game->wave] - 1) && snek->pos[0].x == 1)
+                {
+                    game->wave ++;
+                    game->eaten = 0;
+                }
+
+                switch (game->wave)
+                {
+
+                    case SNAKE_WAVE_1:
+                    {
+                        // check and eat apple. using broadphase SAT AABB. Might optmize with quadtrees
+                        snake_apple_collision(game, apple_num_index[game->wave]);
+
+
+                    }break;
+                    case SNAKE_WAVE_2:
+                    {
+                        if((abs(snek->pos[0].y - loading_bar.y) < 8))
+                        {
+                            if(game->message_index == MSG_L2S2)
+                            {
+                                game->platform_set_title(game->_win, messages[game->message_index ++]);
+                                
+                                reset_apples(screen->width,screen->height);
+                                randomise_apples(screen->width, screen->height,apple_num_index[game->wave]);
+                            }
+                        }
+
+                        snake_apple_collision(game,apple_num_index[game->wave]);
+
+
+                    }break;
+                    default:
+                    {
+    
+
+                    }break;
+
+
+                }
             }
+
         }break;
         
         default:
