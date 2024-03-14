@@ -70,7 +70,7 @@ internal void snake_apple_collision(struct YkGame* game, const u32 apple_num)
 
 internal b8 snake_loading_bar_collision(struct snake* snek)
 {
-    if((abs(snek->pos[0].y - loading_bar.y) <= 4) && snek->dir.x == 1)
+    if((abs(snek->pos[0].y - loading_bar.y) <= 12) && snek->dir.x == 1)
     {
         return 1;
     }
@@ -79,6 +79,7 @@ internal b8 snake_loading_bar_collision(struct snake* snek)
 
 internal void send_msg(struct YkGame* game, YKMSG msg)
 {
+
     game->platform_set_title(game->_win, messages[msg]);
     game->platform_play_audio(game->alert_sound);
     printf("w");
@@ -303,26 +304,33 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                     {
                         internal f32 eep_timer;
                         snake_mv(game,input);
-                        
-                        if((abs(snek->pos[0].y - loading_bar.y) <= 4) && snek->dir.x == 1)
+                        internal b8 flag;
+                        if(snake_loading_bar_collision(snek))
                         {
                             eep_timer += delta * 6;
-                            //printf("%f\n",eep_timer);
-                            
                             if(eep_timer > 3.f)
                             {
                                 send_msg(game,MSG_L2S2);
+                                snek->pos[0] = (v2i){-1,-1};
                                 game->wave ++;
                             }
-
-                            
-                            //reset_apples(screen->width,screen->height);
-                            //randomise_apples(screen->width, screen->height,apple_num_index[game->wave]);
+                            if(flag == 0)
+                            {
+                                send_msg(game,MSG_SNAKE_0);
+                                flag = 1;
+                            }
                         }
                         else
                         {
+                            if(flag == 1)
+                            {
+                                send_msg(game,MSG_SNAKE_1);
+                                flag = 0;
+                            }
                             eep_timer = 0;
+                            
                         }
+                
 
                         //printf("%d\n",game->wave);
 
@@ -331,9 +339,15 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                     }break;
                     case SNAKE_WAVE_2:
                     {
-                       
+                        game->loading_bar.x = game->loading_bar.x < screen->width ? game->loading_bar.x + SNAKE_SPEED : 0;
+                        draw_bar(screen,game);
+                        internal b8 flag;
+                        if(!flag)
+                        {
+                            flag = 1;
 
-                        snake_apple_collision(game,apple_num_index[game->wave]);
+                        }
+                        //snake_apple_collision(game,apple_num_index[game->wave]);
 
 
                     }break;
