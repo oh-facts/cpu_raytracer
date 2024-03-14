@@ -29,7 +29,13 @@ add_library(${PROJECT_NAME} SHARED ${yk_src} ${yk_platform})
 
 add_executable(yk_test "src/platform/yk_platform_sdl.c" "vendor/miniaudio/miniaudio.c")
 
-target_link_libraries(yk_test yk2 SDL2main SDL2)
+if(WIN32)
+    target_link_libraries(yk_test yk2 SDL2main SDL2)
+endif()
+
+if(UNIX)
+    target_link_libraries(yk_test yk2 SDL2main SDL2 m)
+endif()
 
 #----------copy files----------#
 
