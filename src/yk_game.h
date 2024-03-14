@@ -87,7 +87,7 @@ typedef enum YKMSG YKMSG;
 
 #define MSG_L1S1     (MSG_INTRO_0)
 #define MSG_L2S1     (MSG_SNAKE_0)
-#define MSG_L2S2     (7)
+#define MSG_L2S2     (MSG_SNAKE_2)
 
 
 #define NUM_MSG (NUM_MSG_1 + NUM_MSG_2)
@@ -101,8 +101,8 @@ const char* messages[25] = {
 "Here is a song I wrote (for occasions like these)",
 
 "Trying to connect",
-"Lost connection",
-"Connecting Very Fast!",
+"Lost connection :(",
+"Connecting Super Fast!",
 "Loading at record speed!",
 "You can't eat that pixel. It is dead.",
 "I don't know how to find channels",
@@ -142,6 +142,8 @@ struct YkGame
     f32 timer;
     char bgm[32];
     char alert_sound[32];
+    i32 width;
+    i32 height;
 
     //platform
     void * _win;

@@ -4,7 +4,7 @@ internal u32 g_seed = 42;
 internal u32 test_rand();
 internal u32 lcg_rand();
 
-#define speed 1
+#define SNAKE_SPEED 5
 #include <string.h>
 
 void load_level(struct YkGame* game);
@@ -15,6 +15,8 @@ _render_static_##mode(screen)
 internal void _render_static_STATIC_MODE_BASIC(struct render_buffer * screen);
 internal void _render_static_STATIC_MODE_HALF(struct render_buffer * screen);
 internal void _render_static_STATIC_MODE_MIXED(struct render_buffer * screen);
+
+internal void draw_rect(struct render_buffer *screen, u32 minx, u32 miny, u32 maxx, u32 maxy, u32 rgba);
 
 #define MAX_APPLES 10
 internal v2i apples[MAX_APPLES] = {};
@@ -37,6 +39,14 @@ internal void randomise_apples(u32 width, u32 height, u32 num)
 }
 
 internal const v2i loading_bar = (v2i){4, 50};
+
+internal void draw_bar(struct render_buffer* screen, struct YkGame *game)
+{
+    v2i _lb = game->loading_bar;
+    draw_rect(screen, _lb.x ,_lb.y, _lb.x + 4, _lb.y + 4, 0xFFFFFFFF);
+}
+
+internal void snake_mv(struct YkGame * game, struct YkInput *input);
 
 internal void snake_apple_collision(struct YkGame* game, const u32 apple_num)
 {
@@ -80,6 +90,8 @@ YK_API void yk_innit_game(struct YkGame *game)
     strcpy(game->alert_sound, "../res/GameAlert.wav");
 
     game->level = 0;
+    game->width = 80;
+    game->height = 60;
     load_level(game);
 }
 
@@ -198,8 +210,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                 //loading bar
                 if(game->msg_index > MSG_INTRO_3)
                 {
-                    v2i _lb = game->loading_bar;
-                    draw_rect(screen, _lb.x ,_lb.y, _lb.x + 4, _lb.y + 4, 0xFFFFFFFF);
+                    draw_bar(screen,game);                    
                 }
                 
             }
@@ -209,6 +220,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
         {
             struct snake *snek = &game->snek;
 
+                    
             if (yk_input_is_key_tapped(input, YK_ACTION_UP))
             {
                 snek->dir = (v2i){0, -1};
@@ -224,45 +236,6 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
             if (yk_input_is_key_tapped(input, YK_ACTION_RIGHT))
             {
                 snek->dir = (v2i){1, 0};
-            }
-           // printf("%d\n",game->wave);
-
-            // snake position
-            {
-                if ((snek->pos[0].x < screen->width) && snek->pos[0].x >= 0)
-                {
-                    snek->pos[0].x += snek->dir.x;
-                }
-                else
-                {
-                    if (snek->pos[0].x > (i32)screen->width - 1)
-                    {
-                        snek->pos[0].x = 0;
-                    }
-                    else
-                    {
-                        snek->pos[0].x = screen->width - 1;
-                    }
-                }
-
-                if ((snek->pos[0].y < screen->height) && snek->pos[0].y >= 0)
-                {
-                    snek->pos[0].y += snek->dir.y;
-                }
-                else
-                {
-                    if (snek->pos[0].y > (i32)screen->height - 1)
-                    {
-                        snek->pos[0].y = 0;
-                    }
-                    else
-                    {
-                        snek->pos[0].y = screen->height - 1;
-                    }
-                }
-
-                //    printf("x%d y", snek.posX[0]);
-                //    printf("%d\n", snek.posY[0]);
             }
 
             // sim world
@@ -296,6 +269,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
 
                     case SNAKE_WAVE_1:
                     {
+                        snake_mv(game,input);
                         // check and eat apple. using broadphase SAT AABB. Might optmize with quadtrees
                         snake_apple_collision(game, apple_num_index[game->wave]);
 
@@ -305,6 +279,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                         }
                         
                         internal u8 flag;
+                        
                         if(snake_loading_bar_collision(snek))
                         {
                             if(flag == 0)
@@ -317,7 +292,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                         {
                             if(flag == 1)
                             {
-                                game->platform_set_title(game->_win, messages[MSG_SNAKE_1]);
+                                send_msg(game,MSG_SNAKE_1);
                                 flag = 0;
                             }
                             
@@ -327,7 +302,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                     case SNAKE_WAVE_BUFFER:
                     {
                         internal f32 eep_timer;
-
+                        snake_mv(game,input);
                         
                         if((abs(snek->pos[0].y - loading_bar.y) <= 4) && snek->dir.x == 1)
                         {
@@ -336,7 +311,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                             
                             if(eep_timer > 3.f)
                             {
-                                printf("stage 2");
+                                send_msg(game,MSG_L2S2);
                                 game->wave ++;
                             }
 
@@ -420,6 +395,52 @@ u32 test_rand()
 #if 0
     return rand() % 0xFF;
 #endif
+}
+
+
+internal void snake_mv(struct YkGame * game, struct YkInput *input)
+{
+    struct snake *snek = &game->snek;
+
+    // printf("%d\n",game->wave);
+
+    // snake position
+    {
+        if ((snek->pos[0].x < game->width) && snek->pos[0].x >= 0)
+        {
+            snek->pos[0].x += snek->dir.x * SNAKE_SPEED;
+        }
+        else
+        {
+            if (snek->pos[0].x > game->width - 1)
+            {
+                snek->pos[0].x = 0;
+            }
+            else
+            {
+                snek->pos[0].x = game->width - 1;
+            }
+        }
+
+        if ((snek->pos[0].y < game->height) && snek->pos[0].y >= 0)
+        {
+            snek->pos[0].y += snek->dir.y * SNAKE_SPEED;
+        }
+        else
+        {
+            if (snek->pos[0].y > game->height - 1)
+            {
+                snek->pos[0].y = 0;
+            }
+            else
+            {
+                snek->pos[0].y = game->height - 1;
+            }
+        }
+
+        //    printf("x%d y", snek.posX[0]);
+        //    printf("%d\n", snek.posY[0]);
+    }
 }
 
 
