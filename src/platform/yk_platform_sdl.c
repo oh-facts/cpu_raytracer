@@ -1,5 +1,5 @@
 #include <yk_sdl2_include.h>
-
+#include <miniaudio.h>
 #include <yk_common.h>
 #include <yk_game.h>
 
@@ -15,37 +15,12 @@
 
 #define GAME_UPDATE_RATE (1/60.f)
 
-/*
-    returns 0 if audio is invalid
-*/
-u32 sdl_load_audio(const char* name)
+ma_result result;
+ma_engine engine;
+
+void sdl_play_audio(const char* path)
 {
-    SDL_AudioSpec wavSpec;
-    u32 wavLength;
-    u8* wavBuffer;
-
-    {
-        SDL_AudioSpec* temp = SDL_LoadWAV(name, &wavSpec, &wavBuffer, &wavLength);
-        if(temp == 0)
-        {
-            printf("Audio file %s not found.", name);
-            return 0;
-        }
-    }
-        
-
-    SDL_AudioDeviceID deviceId = SDL_OpenAudioDevice(NULL, 0, &wavSpec, NULL, 0);
-    SDL_CHECK(deviceId);
-
-    SDL_CHECK_RES(SDL_QueueAudio(deviceId, wavBuffer, wavLength));
-
-    return deviceId;
-}
-
-void sdl_play_audio(u32 id)
-{
-    if(id == 0) { return;}
-    SDL_PauseAudioDevice(id, 0);
+    ma_engine_play_sound(&engine, path, 0);
 }
 
 void sdl_set_title(void* win, const char* title)
@@ -69,6 +44,14 @@ int main(int argc, char *argv[])
 
     SDL_CHECK(win);
 
+    
+
+    result = ma_engine_init(NULL, &engine);
+    if (result != MA_SUCCESS) {
+        return -1;
+    }
+
+
     SDL_Surface *win_surf = SDL_GetWindowSurface(win);
     SDL_CHECK(win_surf);
 
@@ -87,7 +70,6 @@ int main(int argc, char *argv[])
     //platform
     game._win = win;
     game.platform_play_audio = sdl_play_audio;
-    game.platform_load_audio = sdl_load_audio;
     game.platform_set_title = sdl_set_title;
 
     yk_innit_game(&game);

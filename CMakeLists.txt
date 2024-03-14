@@ -19,6 +19,7 @@ include_directories(
     src
     src/platform
     vendor/SDL/include
+    vendor/miniaudio
     )
 
 
@@ -26,7 +27,7 @@ set(yk_src  "src/yk_arena.c" "src/yk_game.c" "src/yk_arena.c")
 
 add_library(${PROJECT_NAME} SHARED ${yk_src} ${yk_platform}) 
 
-add_executable(yk_test "src/platform/yk_platform_sdl.c")
+add_executable(yk_test "src/platform/yk_platform_sdl.c" "vendor/miniaudio/miniaudio.c")
 
 target_link_libraries(yk_test yk2 SDL2main SDL2)
 

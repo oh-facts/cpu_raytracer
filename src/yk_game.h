@@ -47,7 +47,11 @@ struct snake
 
 enum SNAKE_WAVE
 {
+    /*
+        starter apples
+    */
     SNAKE_WAVE_1,
+    SNAKE_WAVE_BUFFER,
     SNAKE_WAVE_2,
     SNAKE_WAVE_NUM,
 };
@@ -65,8 +69,24 @@ typedef enum LEVEL LEVEL;
 #define MAX_MSG_LEN 128
 
 
-#define MSG_L1S1     (0)
-#define MSG_L2S1     (6)
+enum YKMSG
+{
+    MSG_INTRO_0,
+    MSG_INTRO_1,
+    MSG_INTRO_2,
+    MSG_INTRO_3,
+    MSG_INTRO_4,
+    MSG_INTRO_5,
+
+    MSG_SNAKE_0,
+    MSG_SNAKE_1, 
+    MSG_SNAKE_2, 
+};
+
+typedef enum YKMSG YKMSG;
+
+#define MSG_L1S1     (MSG_INTRO_0)
+#define MSG_L2S1     (MSG_SNAKE_0)
 #define MSG_L2S2     (7)
 
 
@@ -80,8 +100,9 @@ const char* messages[25] = {
 "Please don't leave",
 "Here is a song I wrote (for occasions like these)",
 
-"Loading ...",
-"Loading Faster !",
+"Trying to connect",
+"Lost connection",
+"Connecting Very Fast!",
 "Loading at record speed!",
 "You can't eat that pixel. It is dead.",
 "I don't know how to find channels",
@@ -112,18 +133,19 @@ struct YkGame
     struct snake snek;
     u32 eaten;
     SNAKE_WAVE wave;
+    u32 msg_index;
+    u32 msg_last;
 
     LEVEL level;
 
     // world
-    u8 message_index;
     f32 timer;
-    u32 songs[2];
+    char bgm[32];
+    char alert_sound[32];
 
     //platform
     void * _win;
-    u32  (*platform_load_audio)(const char* audio_name);
-    void (*platform_play_audio)(u32 id);
+    void (*platform_play_audio)(const char* path);
     void (*platform_set_title)(void * win, const char* title);
 };
 
