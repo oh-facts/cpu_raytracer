@@ -4,6 +4,7 @@
 #include <yk_game.h>
 
 #define DEBUG_SDL_CHECK 1
+#define LOG_STATS       0
 
 #if DEBUG_SDL_CHECK
     #define SDL_CHECK_RES(res) _Assert_helper(res == 0, "[SDL Assert is Failure]\n%s", SDL_GetError())
@@ -25,6 +26,8 @@ void sdl_play_audio(const char* path)
 
 void sdl_set_title(void* win, const char* title)
 {
+    // incase text doesn't fully display
+    printf("%s\n",title);
     SDL_SetWindowTitle(win, title);
 }
 
@@ -210,7 +213,7 @@ int main(int argc, char *argv[])
         dt = total_time_elapsed - last_time_elapsed;
 
         // perf stats
-#if 1
+#if LOG_STATS
 
 #define num_frames_for_avg 60
 #define print_stats_time 5

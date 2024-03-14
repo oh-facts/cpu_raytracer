@@ -36,7 +36,7 @@ struct YkInput
     b8 keys_old[YK_ACTION_COUNT];
 };
 
-#define snake_max_size 10
+#define snake_max_size 15
 struct snake
 {   
     // 0 is head
@@ -53,6 +53,8 @@ enum SNAKE_WAVE
     SNAKE_WAVE_1,
     SNAKE_WAVE_BUFFER,
     SNAKE_WAVE_2,
+    SNAKE_WAVE_3,
+
     SNAKE_WAVE_NUM,
 };
 
@@ -62,13 +64,19 @@ enum LEVEL
 {
     LEVEL_INTRO,
     LEVEL_SNAKE,
+    LEVEL_OUTRO,
 };
 
 typedef enum LEVEL LEVEL;
 
 #define MAX_MSG_LEN 128
 
-
+/*
+    ToDo(facts): use better names.
+    These have been very unreadable.
+    I am considering using defines with
+    strings next time
+*/
 enum YKMSG
 {
     MSG_INTRO_0,
@@ -80,7 +88,23 @@ enum YKMSG
 
     MSG_SNAKE_0,
     MSG_SNAKE_1, 
-    MSG_SNAKE_2, 
+    MSG_SNAKE_2,
+
+    //scrapped 
+    MSG_SNAKE_3,
+
+    MSG_SNAKE_4,
+
+    MSG_OUTRO_1,
+    MSG_OUTRO_2,
+    MSG_OUTRO_3,
+    MSG_OUTRO_4,
+    MSG_OUTRO_5,
+    MSG_OUTRO_6,
+    MSG_OUTRO_7,
+
+    MSG_BYE ,
+
 };
 
 typedef enum YKMSG YKMSG;
@@ -88,7 +112,8 @@ typedef enum YKMSG YKMSG;
 #define MSG_L1S1     (MSG_INTRO_0)
 #define MSG_L2S1     (MSG_SNAKE_0)
 #define MSG_L2S2     (MSG_SNAKE_2)
-
+#define MSG_L2S3     (MSG_SNAKE_4)
+#define MSG_L2S4     (MSG_OUTRO_1)
 
 #define NUM_MSG (NUM_MSG_1 + NUM_MSG_2)
 
@@ -103,12 +128,26 @@ const char* messages[25] = {
 "Trying to connect",
 "Lost connection :(",
 "Connecting Super Fast!",
-"Loading at record speed!",
-"You can't eat that pixel. It is dead.",
-"I don't know how to find channels",
-"But I can play music.",
-"You can't eat that pixel. It is dead. I am dying",
-"Please stop eating pixels"
+
+// scrapped
+"It can still be faster",
+
+"Don't eat that pixel. It is dead. I am dying. Press enter to speed up",
+
+"I am tired. I can't find channels at this rate",
+"I don't even know how to find channels",
+"But I can play music",
+
+//programmer's note: This was going to be, "Let me play something else"
+// but Its too much work to do this right and I am too tired to read
+// the example. I want to sleep
+"I would play something else. But this is the only song I know",
+"I am sorry for wasting your time",
+"Maybe I will do better next time",
+"Also",
+"dear dear loves you",
+"Bye"
+
 // this goes on till everything is black because pixels keep generating.
 // And then you explore the puzzle
 // But you will grow small and die if you don't eat pixels so you must eat pixels
@@ -122,6 +161,9 @@ const char* messages[25] = {
 // can't eat anymore
 // i'm dying
 // can't cross self perhaps either?
+// I am tired. I have been up for a long time. I feel like shit. I've been barely
+// getting by. I find this interesting enough to pursue so perhaps I will continue
+// this in the future assuming I don't do the big no no
 };
 
 struct YkGame
