@@ -1,12 +1,12 @@
-I will update this properly later.
-
-## cpu ray tracer
-
-This will be a voxel ray tracer I think. Software rendered.
-I will first make my 2d game with it to develop the renderer a bit. Then I will try voxel rendering with it.
-It is possible that I hardware render w/ compute shaders in the future. Currently, I render to a surface and then blit it to the window's surface. I use sdl2 for the platform layer.
+I know what the title says but that is too ambitious of a project. I lack both the skill and the time.
 
 
+## Software Rasterizer
+
+I render to a pixel buffer and then blit it to the window's surface. I use sdl2 for the platform layer and
+miniaudio for audio. I don't rasterize yet. I am a deceitful cheat, among other things.
+
+I am using it to make a game for the Acerola Game Jam.
 
 ## compile
 
@@ -17,7 +17,7 @@ This also means you don't need to download the submodules if you're not on windo
 
 This will be the case until michaelsoft bindows decides to make a default path for installing libs (30 something major releases, 0 something good ideas)
 
-cmake file is very simple. Literally just do `cmake ..` inside a build directory, no extra flags needed. I personally use ninja + clang
+cmake file is very simple. Literally just do `cmake ..` inside a build directory, no extra flags needed.
 ```
 //Inside the root directory
 mdkir build
@@ -25,6 +25,17 @@ cd build
 cmake ..
 ```
 
+I personally use ninja + clang, so I do this
+```
+mdkir build
+cd build
+cmake .. -DCMAKE_C_COMPILER=clang -G "Ninja"
+ninja
+```
+
+*Note:* I have not packaged the resources as of now (since they do not belong to me), so you will have to do that yourself. Make a `res/GameAlert.wav` and a `res/song0.wav` in the root directory. Allowing failed
+resource loading and fallback options sounds like a good thing to work on.
+
 ## contributing
 
-Open an issue before you decide to work on it. I am unsure what one would want to add to this, since even I haven't been very clear about this engine's purpose, but please feel free.
+Open an issue before you decide to work on it. I am unsure what one would want to add to this, since even I haven't been very clear about this engine's purpose, but please feel free to do whatever. Doing audio properly and text come to mind. I am probably working on them already so open an issue first.
