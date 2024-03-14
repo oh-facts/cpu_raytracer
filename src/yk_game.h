@@ -132,7 +132,7 @@ const char* messages[25] = {
 // scrapped
 "It can still be faster",
 
-"Don't eat that pixel. It is dead. I am dying. Press enter to speed up",
+"Don't eat those pixels. They are dead. I am dying. Press enter to speed up",
 
 "I am tired. I can't find channels at this rate",
 "I don't even know how to find channels",

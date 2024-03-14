@@ -91,7 +91,7 @@ internal void snake_apple_collision(struct YkGame* game, const u32 apple_num, b8
 
 internal b8 snake_loading_bar_collision(struct snake* snek)
 {
-    if((abs(snek->pos[0].y - loading_bar.y) <= 12) && snek->dir.x == 1)
+    if((abs(snek->pos[0].y - loading_bar.y) <= 6) && snek->dir.x == 1)
     {
         return 1;
     }
