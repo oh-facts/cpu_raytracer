@@ -30,6 +30,8 @@ enum YK_ACTION
     YK_ACTION_LEFT,
     YK_ACTION_RIGHT,
     YK_ACTION_ACCEPT,
+    YK_ACTION_SAVE,
+    YK_ACTION_RESTORE,
     
     YK_ACTION_COUNT,
 };
@@ -85,7 +87,12 @@ typedef enum LEVEL LEVEL;
     ToDo(facts): use better names.
     These have been very unreadable.
     I am considering using defines with
-    strings next time
+    strings next time.
+
+Note(facts): I was able to make modifications
+with very little effort. I think this way is fine.
+Only that I should use better names. MSG_INTRO_# is bad.
+Use actual names after MSG_INTRO.
 */
 enum YKMSG
 {
@@ -95,6 +102,7 @@ enum YKMSG
     MSG_INTRO_3,
     MSG_INTRO_4,
     MSG_INTRO_5,
+    MSG_INTRO_6,
     
     MSG_SNAKE_0,
     MSG_SNAKE_1, 
@@ -134,9 +142,10 @@ typedef enum YKMSG YKMSG;
 // very good names for the messages
 
 const char* messages[25] = {
-    "Welcome! This is a scripted sequence to help you get started. Press the ENTER button on your remote",
+    "Welcome! This is a scripted sequence to help you with setup. Press the ENTER button on your remote",
     "Warning: Prolonged exposure to the Dear Dear Home System can lead to mild nausea, and in some cases loss of life",
     "In most cases, loss of loved ones, and in rare cases, loss of self being. Proceed with caution",
+    "Remember. You can *always* press S to save and R to return, incase you make a mistake in the setup.",
     "The DDHS will now look for channels on your local network. This will take a while",
     "Please don't leave",
     "Here is a song I wrote (for occasions like these)",
@@ -202,6 +211,8 @@ struct YkGame
     char alert_sound[32];
     i32 width;
     i32 height;
+    
+    struct YkGame* saved;
     
     //platform
     void * _win;

@@ -6,25 +6,27 @@
 #include <stdio.h>
 #include <string.h>
 
+#define printl(...) printf(__VA_ARGS__); printf("\n")
+
 #define DEBUG 1
 
 #define _Assert_helper(expr, format, ...)            \
-    do                                               \
-    {                                                \
-        if (!(expr))                                 \
-        {                                            \
-            printf(format, ##__VA_ARGS__);           \
-            volatile int *ptr = 0;                   \
-            *ptr = 0;                                \
-        }                                            \
-    } while (0)
+do                                               \
+{                                                \
+if (!(expr))                                 \
+{                                            \
+printf(format, ##__VA_ARGS__);           \
+volatile int *ptr = 0;                   \
+*ptr = 0;                                \
+}                                            \
+} while (0)
 
 #if DEBUG
-    #define Assert(expr) _Assert_helper(expr, "Assert failed")
-    #define AssertM(expr, format, ...) _Assert_helper(expr,format,##__VA_ARGS__)
+#define Assert(expr) _Assert_helper(expr, "Assert failed")
+#define AssertM(expr, format, ...) _Assert_helper(expr,format,##__VA_ARGS__)
 #else
-    #define Assert(expr)
-    #define AssertM(expr, format, ...)
+#define Assert(expr)
+#define AssertM(expr, format, ...)
 #endif
 
 #define Kilobytes(Value) ((uint64_t)(Value) * 1024)
@@ -58,9 +60,9 @@ typedef int8_t b8;
 #define false 0
 
 #if defined _WIN32
-    #define YK_API __declspec(dllexport)
+#define YK_API __declspec(dllexport)
 #else
-    #define YK_API
+#define YK_API
 #endif
 
 #endif

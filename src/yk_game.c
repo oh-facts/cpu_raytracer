@@ -92,6 +92,41 @@ internal void snake_apple_collision(struct YkGame* game, const u32 apple_num, b8
     }
 }
 
+//Deeps clone game data. Exists so I can save.
+internal void game_data_clone(struct YkGame* dst, struct YkGame* src)
+{
+    dst->loading_bar = src->loading_bar;
+    dst->snek        = src->snek;
+    dst->eaten       = src->eaten;
+    dst->msg_index   = src->msg_index;
+    dst->msg_last    = src->msg_last;
+    dst->level       = src->level;
+    dst->timer       = src->timer;
+    
+    strcpy(dst->bgm,src->bgm);
+    strcpy(dst->alert_sound,src->alert_sound);
+    
+    dst->width       = src->width;
+    dst->height      = src->height;
+    dst->saved       = src->saved;
+    dst->_win        = src->_win;
+    
+    dst->platform_play_audio = src->platform_play_audio;
+    dst->platform_set_title = src->platform_set_title;
+}
+
+internal void game_data_save(struct YkGame* game)
+{
+    printl("saved game");
+    game_data_clone(game->saved,game);
+}
+
+internal void game_data_restore(struct YkGame* game)
+{
+    printl("restore game");
+    game_data_clone(game,game->saved);
+}
+
 internal b8 snake_loading_bar_collision(struct snake* snek)
 {
     if((abs(snek->pos[0].y - loading_bar.y) <= 6) && snek->dir.x == 1)
@@ -127,6 +162,7 @@ internal void snake_eat_self(struct snake* snek)
     if(hit_i)
     {
         snek->size = hit_i;
+        
         //printf("hit at %d\n",hit_i);
     }
 }
@@ -141,6 +177,9 @@ internal void send_msg(struct YkGame* game, YKMSG msg)
 
 YK_API void yk_innit_game(struct YkGame *game)
 {
+    //ToDo(facts): remove allocations
+    game->saved = malloc(sizeof(struct YkGame));
+    
     strcpy(game->bgm,"../res/song0.wav");
     strcpy(game->alert_sound, "../res/GameAlert.wav");
     
@@ -289,6 +328,16 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
             if (yk_input_is_key_tapped(input, YK_ACTION_RIGHT))
             {
                 snek->dir = (v2i){1, 0};
+            }
+            
+            if (yk_input_is_key_tapped(input, YK_ACTION_SAVE))
+            {
+                game_data_save(game);
+            }
+            
+            if (yk_input_is_key_tapped(input, YK_ACTION_RESTORE))
+            {
+                game_data_restore(game);
             }
             
             // sim world
