@@ -16,6 +16,13 @@ union v2i
 
 typedef union v2i v2i;
 
+// ToDo(facts): I want to add this file to "sand box"
+// for that I need to make it so I can avoid having
+// game data inside this header. Game data that will
+// be hard to remove is my actions. I can make it so
+// that these are generic key names and inside my game.c
+// I can map the enum to my own actions. This is a pretty
+// good idea. I should do this.
 enum YK_ACTION
 {
     YK_ACTION_HOLD_HANDS = 0,
@@ -44,6 +51,10 @@ struct snake
     v2i dir;
     i32 size;
 };
+
+/*
+    ToDo(facts): Use better naming for the enums
+*/
 
 enum SNAKE_WAVE
 {
@@ -116,6 +127,12 @@ typedef enum YKMSG YKMSG;
 #define MSG_L2S4     (MSG_OUTRO_1)
 
 #define NUM_MSG (NUM_MSG_1 + NUM_MSG_2)
+
+// I think i want to use a #define with strings
+// and have a "message index" for every stage
+// for those moments when I need to track how many
+// messages have been shared. Also, I want to use
+// very good names for the messages
 
 const char* messages[25] = {
 "Welcome! This is a scripted sequence to help you get started. Press the ENTER button on your remote",

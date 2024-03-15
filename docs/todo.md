@@ -8,11 +8,12 @@ This section is for things I need to work on
 2. ~~surface blitting (currently I directly render to window surface pixel buffer)~~
 3. ~~Draw Rects~~
 4. Fix spegetti code you made for the jam
-5. simd draw rects
-6. alpha blending
-7. hot reload.
-8. weird winmain/main warning I get on windows when compiling
-9. key handling. I wrote more details in the todo there
+5. emscripten build
+6. simd draw rects
+7. alpha blending
+8. hot reload.
+9. weird winmain/main warning I get on windows when compiling
+10. key handling. I wrote more details in the todo there
 
 ## planned features
 
