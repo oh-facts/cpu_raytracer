@@ -23,6 +23,9 @@ internal void _render_static_STATIC_MODE_BLACK(struct render_buffer * screen);
 
 internal void draw_rect(struct render_buffer *screen, u32 minx, u32 miny, u32 maxx, u32 maxy, u32 rgba);
 
+#define V2I_FMT "%d %d"
+#define V2I_(s) (s).x, (s.y)
+
 #define MAX_APPLES 10
 internal v2i apples[MAX_APPLES] = {};
 internal const u32 apple_num_index[SNAKE_WAVE_NUM] = {5,3,4,5};
@@ -72,7 +75,7 @@ internal void snake_apple_collision(struct YkGame* game, const u32 apple_num, b8
             
             apples[i].x = -100; //lcg_rand() % screen->width;
             apples[i].y = -100; //lcg_rand() % screen->height;
-
+            
             if(grow)
             {
                 snek->pos[snek->size] = snek->pos[snek->size - 1];
@@ -82,7 +85,7 @@ internal void snake_apple_collision(struct YkGame* game, const u32 apple_num, b8
             {
                 snek->size --;
             }
-
+            
             game->eaten ++;
             //printf("Gulp %d\n",i);
         }
@@ -98,9 +101,39 @@ internal b8 snake_loading_bar_collision(struct snake* snek)
     return 0;
 }
 
+// 0 if snake doesn't hit.
+// index if it does hit
+internal u32 snake_self_collision(struct snake* snek)
+{
+    
+    //It seems it is impossible for a snake to eat body index < 3?
+    for(u32 i = 3; i < snek->size; i ++)
+    {
+        //printf("%d: " V2I_FMT  "\n",i,V2I_(snek->pos[i]));
+        if((snek->pos[i].x == snek->pos[0].x ) &&
+           (snek->pos[i].y == snek->pos[0].y ))
+        {
+            return i;
+        }
+    }
+    
+    return 0;
+}
+
+internal void snake_eat_self(struct snake* snek)
+{
+    u32 hit_i = snake_self_collision(snek);
+    
+    if(hit_i)
+    {
+        snek->size = hit_i;
+        //printf("hit at %d\n",hit_i);
+    }
+}
+
 internal void send_msg(struct YkGame* game, YKMSG msg)
 {
-
+    
     game->platform_set_title(game->_win, messages[msg]);
     game->platform_play_audio(game->alert_sound);
     //printf("w");
@@ -110,7 +143,7 @@ YK_API void yk_innit_game(struct YkGame *game)
 {
     strcpy(game->bgm,"../res/song0.wav");
     strcpy(game->alert_sound, "../res/GameAlert.wav");
-
+    
     game->level = 0;
     game->width = 80;
     game->height = 60;
@@ -134,24 +167,21 @@ void load_level(struct YkGame* game)
             reset_apples();
             randomise_apples(80, 60, apple_num_index[game->wave]);
             struct snake *snek = &game->snek;
-            snek->size = 1;
+            snek->size = 10;
             snek->dir = (v2i){1, 0};
-
-            for (i32 i = 0, size = snek->size; i < size; i++)
-            {
-                snek->pos[i] = loading_bar;
-            }
+            snek->pos[0] = loading_bar;
+            
             game->platform_set_title(game->_win, messages[MSG_SNAKE_0]);
-
+            
         }break;
-    
+        
         default:
         {
-
+            
         }break;
     }
-
-
+    
+    
 }
 
 
@@ -174,14 +204,14 @@ void draw_rect(struct render_buffer *screen, u32 minx, u32 miny, u32 maxx, u32 m
     miny = (miny < 0) ? 0 : miny;
     maxx = (maxx > screen->width) ? screen->width : maxx;
     maxy = (maxy > screen->height) ? screen->height : maxy;
-
+    
     // ToDo(facts): store pitch inside render_buffer
     u8 *row = (u8 *)screen->pixels + miny * (screen->width * 4) + minx * 4;
-
+    
     for (u32 y = miny; y < maxy; y++)
     {
         u32 *pixel = (u32 *)row;
-
+        
         for (u32 x = minx; x < maxx; x++)
         {
             *pixel++ = rgba;
@@ -214,7 +244,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                 {
                     game->platform_play_audio(game->bgm);
                 }
-
+                
                 if(game->msg_index == MSG_L2S1)
                 {
                     game->level ++;
@@ -223,13 +253,13 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                 }
                 
                 send_msg(game, game->msg_index++);
-
+                
             }
             if (game->timer > 1 / 12.f)
             {
                 game->timer = 0;
                 RENDER_STATIC(screen, STATIC_MODE_BASIC);
-
+                
                 //loading bar
                 if(game->msg_index > MSG_INTRO_3)
                 {
@@ -237,13 +267,13 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                 }
                 
             }
-
+            
         }break;
         case LEVEL_SNAKE:
         {
             struct snake *snek = &game->snek;
-
-                    
+            
+            
             if (yk_input_is_key_tapped(input, YK_ACTION_UP))
             {
                 snek->dir = (v2i){0, -1};
@@ -260,24 +290,26 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
             {
                 snek->dir = (v2i){1, 0};
             }
-
+            
             // sim world
             if (game->timer > 1 / 12.f)
             {
                 game->timer = 0;
-
+                
                 switch (game->wave)
                 {
-
+                    
                     case SNAKE_WAVE_1:
                     {
+                        snake_eat_self(snek);
+                        
                         //draw my life
                         RENDER_STATIC(screen, STATIC_MODE_MIXED);
                         draw_apples(screen, WHITE);
                         snake_mv(game,input);
                         // check and eat apple. using broadphase SAT AABB. Might optmize with quadtrees
                         snake_apple_collision(game, apple_num_index[game->wave],1);
-
+                        
                         if(game->eaten == apple_num_index[game->wave])
                         {
                             game->wave ++;                            
@@ -302,7 +334,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                             }
                             
                         }
-
+                        
                     }break;
                     case SNAKE_WAVE_BUFFER:
                     {
@@ -318,7 +350,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                                 send_msg(game,MSG_L2S2);
                                 snek->pos[0] = (v2i){-1,-1};
                                 game->wave ++;
-
+                                
                             }
                             if(flag == 0)
                             {
@@ -336,19 +368,19 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                             eep_timer = 0;
                             
                         }
-                
-
-                        //printf("%d\n",game->wave);
-
                         
-
+                        
+                        //printf("%d\n",game->wave);
+                        
+                        
+                        
                     }break;
                     case SNAKE_WAVE_2:
                     {
                         RENDER_STATIC(screen, STATIC_MODE_MIXED);
                         internal f32 counter;
                         counter += delta * 4;
-
+                        
                         game->loading_bar.x = game->loading_bar.x < screen->width ? game->loading_bar.x + SNAKE_SPEED : 0;
                         draw_bar(screen,game);
                         internal b8 flag;
@@ -363,10 +395,10 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                             snek->pos[0] = loading_bar;
                             break;
                         }
-
+                        
                         //snake_apple_collision(game,apple_num_index[game->wave]);
-
-
+                        
+                        
                     }break;
                     case SNAKE_WAVE_3:
                     {
@@ -374,7 +406,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                         draw_apples(screen, WHITE);
                         snake_mv(game,input);
                         snake_apple_collision(game,apple_num_index[game->wave],0);
-
+                        
                         internal b8 flag;
                         if(game->eaten == apple_num_index[game->wave] && !flag)
                         {
@@ -383,18 +415,18 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                             flag = 1;
                             game->level ++;
                         }
-
+                        
                     }break;
                     
                     default:
                     {
                         printf("ooga booga why is control here");
-
+                        
                     }break;
-
-
+                    
+                    
                 }
-
+                
                 
                 // draw snake
                 for (u32 i = 0; i < snek->size; i++)
@@ -402,15 +434,15 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                     draw_rect(screen, snek->pos[i].x, snek->pos[i].y, snek->pos[i].x + 4, snek->pos[i].y + 4, WHITE);
                 }
                 
-
+                
                 // update snake body
                 for (u32 i = snek->size - 1; i > 0; i--)
                 {
                     snek->pos[i] = snek->pos[i - 1];
                 }
-
+                
             }
-
+            
         }break;
         case LEVEL_OUTRO:
         {
@@ -421,7 +453,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                 RENDER_STATIC(screen, STATIC_MODE_BLACK);
                 game->loading_bar.x = game->loading_bar.x < screen->width ? game->loading_bar.x + SNAKE_SPEED : 0;
                 draw_bar(screen,game);
-                    
+                
                 
                 timer = 0;
             }
@@ -429,34 +461,34 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
             if(yk_input_is_key_tapped(input,YK_ACTION_ACCEPT))
             {
                 //printf("%d\n",game->msg_index);
-
+                
                 send_msg(game,game->msg_index++);
-
+                
                 if(game->msg_index > MSG_BYE)
                 {
                     exit(1);
-                   // printf("bye");
+                    // printf("bye");
                 }
-
+                
             }
-
+            
         }break;
-
+        
         default:
         {
             printf("ooga booga why is control here\n");
         }break;
     }
-   
     
-
-// stupid debug
+    
+    
+    // stupid debug
 #if 0
     if (input->keys[YK_ACTION_HOLD_HANDS] == 1)
     {
         for (u32 i = 0; i < height; i++)
         {
-
+            
             for (u32 j = 0; j < width; j++)
             {
                 printf("%d ", screen->pixels[width * i + j]);
@@ -484,7 +516,7 @@ u32 test_rand()
 #if 1
     return lcg_rand() % 0xFF;
 #endif
-
+    
 #if 0
     return rand() % 0xFF;
 #endif
@@ -494,9 +526,9 @@ u32 test_rand()
 internal void snake_mv(struct YkGame * game, struct YkInput *input)
 {
     struct snake *snek = &game->snek;
-
+    
     // printf("%d\n",game->wave);
-
+    
     // snake position
     {
         if ((snek->pos[0].x < game->width) && snek->pos[0].x >= 0)
@@ -514,7 +546,7 @@ internal void snake_mv(struct YkGame * game, struct YkInput *input)
                 snek->pos[0].x = game->width - 1;
             }
         }
-
+        
         if ((snek->pos[0].y < game->height) && snek->pos[0].y >= 0)
         {
             snek->pos[0].y += snek->dir.y * SNAKE_SPEED;
@@ -530,7 +562,7 @@ internal void snake_mv(struct YkGame * game, struct YkInput *input)
                 snek->pos[0].y = game->height - 1;
             }
         }
-
+        
         //    printf("x%d y", snek.posX[0]);
         //    printf("%d\n", snek.posY[0]);
     }
@@ -551,116 +583,116 @@ internal void snake_mv(struct YkGame * game, struct YkInput *input)
 // I don't even know why I am explaining this. Who even reads this stuff
 
 #define _RENDER_STATIC_ONE    \
-    u32 width = screen->width; \
-    u32 height = screen->height; \
-    u32 *pixels = screen->pixels;   \
-    for (u32 i = 0; i < height; i++)    \
-    {                                   \
-        u32 pixel;                      \
-        for (u32 j = 0; j < width; j++) \
-        {                               
+u32 width = screen->width; \
+u32 height = screen->height; \
+u32 *pixels = screen->pixels;   \
+for (u32 i = 0; i < height; i++)    \
+{                                   \
+u32 pixel;                      \
+for (u32 j = 0; j < width; j++) \
+{                               
 
 
 #define _STATIC_MODE_BASIC \
-    pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
 
 #define _STATIC_MODE_MIXED                                                                                 \
-            if (j % 2 == 0)                                                                     \
-            { \
-                u32 randy = test_rand() * 1.5;              \
-                pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;  \
-            }   \
-            else    \
-            {   \
-                pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand(); \
-            }
+if (j % 2 == 0)                                                                     \
+{ \
+u32 randy = test_rand() * 1.5;              \
+pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;  \
+}   \
+else    \
+{   \
+pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand(); \
+}
 
 #define _STATIC_MODE_MIXED_2                                                                                 \
-            if (!(j % 5 == 0))                                                                     \
-            { \
-                u32 randy = test_rand() * 1.5;              \
-                pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;  \
-            }   \
-            else    \
-            {   \
-                pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand(); \
-            }       
+if (!(j % 5 == 0))                                                                     \
+{ \
+u32 randy = test_rand() * 1.5;              \
+pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;  \
+}   \
+else    \
+{   \
+pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand(); \
+}       
 
 #define _STATIC_MODE_HALF \
-            if (j > width / 2)\
-            {\
-                u32 randy = test_rand() * 1.5;\
-                pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;\
-            }\
-            else\
-            {\
-                pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();\
-            }
+if (j > width / 2)\
+{\
+u32 randy = test_rand() * 1.5;\
+pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;\
+}\
+else\
+{\
+pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();\
+}
 
 #define _STATIC_MODE_BLACK                                                       \
-     u32 randy = test_rand() * 1.5;                                   \
-     pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;   
+u32 randy = test_rand() * 1.5;                                   \
+pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;   
 
 
 #define _RENDER_STATIC_END        \
-    {\
-                u32 overlay = 0x44000000;\
+{\
+u32 overlay = 0x44000000;\
 \
-                u8 src_r = (pixel >> 16) & 0xFF;\
-                u8 src_g = (pixel >> 8) & 0xFF;\
-                u8 src_b = pixel & 0xFF;\
+u8 src_r = (pixel >> 16) & 0xFF;\
+u8 src_g = (pixel >> 8) & 0xFF;\
+u8 src_b = pixel & 0xFF;\
 \
-                u8 dst_r = (overlay >> 16) & 0xFF;\
-                u8 dst_g = (overlay >> 8) & 0xFF;\
-                u8 dst_b = overlay & 0xFF;\
-                u8 dst_a = (overlay >> 24) & 0xFF;\
+u8 dst_r = (overlay >> 16) & 0xFF;\
+u8 dst_g = (overlay >> 8) & 0xFF;\
+u8 dst_b = overlay & 0xFF;\
+u8 dst_a = (overlay >> 24) & 0xFF;\
 \
-                u8 new_r = (src_r * (255 - dst_a) + dst_r * dst_a) / 255;\
-                u8 new_g = (src_g * (255 - dst_a) + dst_g * dst_a) / 255;\
-                u8 new_b = (src_b * (255 - dst_a) + dst_b * dst_a) / 255;\
+u8 new_r = (src_r * (255 - dst_a) + dst_r * dst_a) / 255;\
+u8 new_g = (src_g * (255 - dst_a) + dst_g * dst_a) / 255;\
+u8 new_b = (src_b * (255 - dst_a) + dst_b * dst_a) / 255;\
 \
-                pixel = (0xFF << 24) | (new_r << 16) | (new_g << 8) | new_b;\
+pixel = (0xFF << 24) | (new_r << 16) | (new_g << 8) | new_b;\
 \
-                pixels[width * i + j] = pixel;\
-            }\
-        }\
-    }
+pixels[width * i + j] = pixel;\
+}\
+}\
+}
 
 
 
 void _render_static_STATIC_MODE_BASIC(struct render_buffer * screen)
 {
     _RENDER_STATIC_ONE
-    _STATIC_MODE_BASIC
-    _RENDER_STATIC_END
+        _STATIC_MODE_BASIC
+        _RENDER_STATIC_END
 }
 
 void _render_static_STATIC_MODE_MIXED(struct render_buffer * screen)
 {
     _RENDER_STATIC_ONE
-    _STATIC_MODE_MIXED
-    _RENDER_STATIC_END
+        _STATIC_MODE_MIXED
+        _RENDER_STATIC_END
 }
 
 void _render_static_STATIC_MODE_HALF(struct render_buffer * screen)
 {
     _RENDER_STATIC_ONE
-    _STATIC_MODE_HALF
-    _RENDER_STATIC_END
+        _STATIC_MODE_HALF
+        _RENDER_STATIC_END
 }
 
 void _render_static_STATIC_MODE_MIXED_2(struct render_buffer * screen)
 {
     _RENDER_STATIC_ONE
-    _STATIC_MODE_MIXED_2
-    _RENDER_STATIC_END
+        _STATIC_MODE_MIXED_2
+        _RENDER_STATIC_END
 }
 
 void _render_static_STATIC_MODE_BLACK(struct render_buffer * screen)
 {
     _RENDER_STATIC_ONE
-    _STATIC_MODE_BLACK 
-    _RENDER_STATIC_END
+        _STATIC_MODE_BLACK 
+        _RENDER_STATIC_END
 }
 
 // metaprogramming sin ends here.
