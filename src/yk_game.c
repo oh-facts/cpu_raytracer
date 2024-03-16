@@ -94,10 +94,6 @@ internal void snake_apple_collision(struct YkGame* game, const u32 apple_num, b8
             else
             {
                 snek->size --;
-                if(snek->size == 0)
-                {
-                    death_screen(game);
-                }
             }
             
             game->num_apples --;
@@ -314,6 +310,16 @@ b8 yk_input_is_key_held(struct YkInput *state, u32 key)
 YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta)
 {
     game->timer += delta;
+    
+    if (yk_input_is_key_tapped(input, YK_ACTION_SAVE))
+    {
+        game_data_save(game);
+    }
+    else if (yk_input_is_key_tapped(input, YK_ACTION_RESTORE))
+    {
+        game_data_restore(game);
+    }
+    
     switch (game->level)
     {
         case LEVEL_INTRO:
@@ -372,28 +378,18 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                 snek->dir = (v2i){1, 0};
             }
             
-            if (yk_input_is_key_tapped(input, YK_ACTION_SAVE))
-            {
-                game_data_save(game);
-            }
-            
-            if (yk_input_is_key_tapped(input, YK_ACTION_RESTORE))
-            {
-                game_data_restore(game);
-            }
             
             // sim world
             if (game->timer > 1 / 12.f)
             {
                 game->timer = 0;
+                snake_eat_self(snek);
                 
                 switch (game->wave)
                 {
                     
                     case SNAKE_WAVE_START:
                     {
-                        snake_eat_self(snek);
-                        
                         //draw my life
                         RENDER_STATIC(screen, STATIC_MODE_MIXED);
                         draw_apples(game,screen, WHITE,SNAKE_LEVEL_START_APPLE_NUM);
@@ -489,10 +485,9 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                             send_msg(game,MSG_DEAD_PIXELS_3);
                         }
                         
-                        if(game->num_apples == 0)
+                        if(snek->size == 0)
                         {
-                            send_msg(game,MSG_OUTRO_1);
-                            game->msg_index = MSG_OUTRO_2;
+                            snek->size = 1;
                             game->level ++;
                         }
                         

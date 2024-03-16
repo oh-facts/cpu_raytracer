@@ -205,7 +205,7 @@ const char* messages[25] = {
 #define MAX_APPLES (10)
 
 #define SNAKE_LEVEL_START_APPLE_NUM      (8)
-#define SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM (4)
+#define SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM (3)
 
 // ToDo(facts): Instead of having next wave initialization data inside the  if inside waves to go to the next wave,
 // make a next_wave function that is similar to next level load.
