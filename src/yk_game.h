@@ -73,10 +73,8 @@ enum SNAKE_WAVE
 {
     
     //starter apples. After eating all the apples you go the next stage.
+    // In this stage you align yourself with the bar. And when you are alligned //you go to the next stage
     SNAKE_WAVE_START,
-    
-    // In this stage you align yourself with the bar. And when you are alligned you go to the next stage
-    SNAKE_WAVE_ALIGN,
     
     // After being aligned for a few seconds, you go to the next stage
     SNAKE_WAVE_ALIGN_WAIT,
@@ -138,6 +136,10 @@ enum YKMSG
     //snake align wait
     MSG_SNAKE_ALIGN,
     
+    MSG_DEAD_PIXELS_1,
+    MSG_DEAD_PIXELS_2,
+    MSG_DEAD_PIXELS_3,
+    
     MSG_OUTRO_1,
     MSG_OUTRO_2,
     MSG_OUTRO_3,
@@ -146,11 +148,8 @@ enum YKMSG
     MSG_OUTRO_6,
     MSG_OUTRO_7,
     MSG_OUTRO_8,
-    MSG_OUTRO_9,
-    MSG_OUTRO_10,
-    MSG_OUTRO_11,
     
-    MSG_BYE ,
+    MSG_BYE,
     
     MSG_NUM
 };
@@ -175,17 +174,18 @@ const char* messages[25] = {
     "Here is a song I wrote (for occasions like these)",
     
     //snake start , snake align
-    "Trying to connect",
+    "Trying to connect (This can take upto 3 minutes)",
     "Lost connection :(",
     
     //snake align wait
-    "Connecting Super Fast!",
+    "Established connection! Initializing ...",
     
-    //snake outro
+    //dead pixels
     "Those pixels are dead. I am dying.",
     "If you eat them. I will get the pixels back.",
     "I don't wan't to die. Can I have the pixels back?",
     
+    // snake outro
     "I am tired. I can't find channels at this rate",
     "I don't even know how to find channels",
     "But I can play music",
@@ -204,7 +204,7 @@ const char* messages[25] = {
 
 #define MAX_APPLES (10)
 
-#define SNAKE_LEVEL_START_APPLE_NUM      (6)
+#define SNAKE_LEVEL_START_APPLE_NUM      (8)
 #define SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM (4)
 
 // ToDo(facts): Instead of having next wave initialization data inside the  if inside waves to go to the next wave,

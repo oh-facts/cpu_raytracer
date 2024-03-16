@@ -35,6 +35,9 @@ internal void reset_apples(struct YkGame* game)
     }
 }
 
+internal void death_screen(struct YkGame* game);
+
+// Remember when calling this function, you want to factor in loading bar //height when deciding height. Because otherwise it might be at the same level //and then you collect the apples while loading and thats weird
 internal void randomise_apples(struct YkGame* game ,u32 width, u32 height, u32 num)
 {
     for(u32 i = 0; i < num; i ++)
@@ -49,6 +52,9 @@ internal void draw_bar(struct render_buffer* screen, struct YkGame *game)
 {
     v2i _lb = game->loading_bar;
     draw_rect(screen, _lb.x ,_lb.y, _lb.x + 4, _lb.y + 4, 0xFFFFFFFF);
+    draw_rect(screen, _lb.x+5 ,_lb.y, _lb.x + 9, _lb.y + 4, 0xFFFFFFFF);
+    draw_rect(screen, _lb.x+10 ,_lb.y, _lb.x + 14, _lb.y + 4, 0xFFFFFFFF);
+    
 }
 
 internal void draw_apples(struct YkGame* game, struct render_buffer * screen, u32 color, u32 num_apples)
@@ -88,6 +94,10 @@ internal void snake_apple_collision(struct YkGame* game, const u32 apple_num, b8
             else
             {
                 snek->size --;
+                if(snek->size == 0)
+                {
+                    death_screen(game);
+                }
             }
             
             game->num_apples --;
@@ -144,6 +154,14 @@ internal void game_data_restore(struct YkGame* game)
     printl("restoring");
     game_data_clone(game,game->saved);
     send_msg(game, game->last_msg);
+}
+
+internal void death_screen(struct YkGame* game)
+{
+    printl(":( DEAD DEAD");
+    
+    //ToDo(facts): doesn't work
+    game_data_restore(game);
 }
 
 internal b8 snake_loading_bar_collision(struct snake* snek)
@@ -227,10 +245,10 @@ void load_level(struct YkGame* game)
             reset_apples(game);
             
             game->num_apples = SNAKE_LEVEL_START_APPLE_NUM;
-            randomise_apples(game,80, 60, SNAKE_LEVEL_START_APPLE_NUM );
+            randomise_apples(game,80, loading_bar.y - 5, SNAKE_LEVEL_START_APPLE_NUM );
             
             struct snake *snek = &game->snek;
-            snek->size = 10;
+            snek->size = 3;
             snek->dir = (v2i){1, 0};
             snek->pos[0] = loading_bar;
             
@@ -383,13 +401,9 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                         // check and eat apple. using broadphase SAT AABB. Might optmize with quadtrees
                         snake_apple_collision(game, SNAKE_LEVEL_START_APPLE_NUM ,1);
                         
-                        if(game->num_apples == 0)
-                        {
-                            game->wave ++;                            
-                        }
                         
                         local_persist u8 flag;
-                        
+                        local_persist f32 eep_timer;
                         if(snake_loading_bar_collision(snek))
                         {
                             if(flag == 0)
@@ -397,39 +411,19 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                                 send_msg(game,MSG_SNAKE_TRYING_TO_CONN);
                                 flag = 1;
                             }
-                        }
-                        else
-                        {
-                            if(flag == 1)
-                            {
-                                send_msg(game,MSG_SNAKE_LOST_CONN);
-                                flag = 0;
-                            }
                             
-                        }
-                        
-                    }break;
-                    case SNAKE_WAVE_ALIGN:
-                    {
-                        RENDER_STATIC(screen, STATIC_MODE_MIXED);
-                        internal f32 eep_timer;
-                        snake_mv(game,input);
-                        internal b8 flag;
-                        if(snake_loading_bar_collision(snek))
-                        {
-                            eep_timer += delta * 6;
-                            if(eep_timer > 3.f)
+                            //come back
+                            //delta * 6 is 1 second.
+                            eep_timer += delta * 6 * (((snek->size - 3)/(9 - 3.f)) * (180 - 3) + 3);
+                            if(eep_timer > 180 * 3)
                             {
                                 send_msg(game,MSG_SNAKE_ALIGN);
                                 snek->pos[0] = (v2i){-1,-1};
                                 game->wave ++;
-                                
+                                break;
                             }
-                            if(flag == 0)
-                            {
-                                send_msg(game,MSG_SNAKE_TRYING_TO_CONN);
-                                flag = 1;
-                            }
+                            
+                            
                         }
                         else
                         {
@@ -465,7 +459,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                             game->eaten = 0;
                             game->num_apples = SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM ;
                             reset_apples(game);
-                            randomise_apples(game,80,30, SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM);
+                            randomise_apples(game,80,loading_bar.y - 5, SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM);
                             snek->pos[0] = loading_bar;
                             break;
                         }
@@ -481,13 +475,24 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                         snake_mv(game,input);
                         snake_apple_collision(game,SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM,0);
                         
-                        internal b8 flag;
-                        if(game->num_apples == 0 && !flag)
+                        //ToDo(facts): puke
+                        if(game->eaten == 1 && game->last_msg!= MSG_DEAD_PIXELS_1)
                         {
-                            
+                            send_msg(game,MSG_DEAD_PIXELS_1);
+                        }
+                        else if(game->eaten == 2 && game->last_msg!= MSG_DEAD_PIXELS_2)
+                        {
+                            send_msg(game,MSG_DEAD_PIXELS_2);
+                        }
+                        else if(game->eaten == 3 && game->last_msg != MSG_DEAD_PIXELS_3)
+                        {
+                            send_msg(game,MSG_DEAD_PIXELS_3);
+                        }
+                        
+                        if(game->num_apples == 0)
+                        {
                             send_msg(game,MSG_OUTRO_1);
                             game->msg_index = MSG_OUTRO_2;
-                            flag = 1;
                             game->level ++;
                         }
                         
