@@ -191,6 +191,12 @@ const char* messages[25] = {
         // this in the future assuming I don't do the big no no
 };
 
+#define MAX_APPLES 10
+
+// sort this out. I don't understand it. I don't remember
+// why I did it
+const u32 apple_num_index[SNAKE_WAVE_NUM] = {5,3,4,5};
+
 struct YkGame
 {
     // stage 0;
@@ -202,6 +208,8 @@ struct YkGame
     SNAKE_WAVE wave;
     u32 msg_index;
     u32 msg_last;
+    v2i apples[MAX_APPLES];
+    
     
     LEVEL level;
     

@@ -26,23 +26,19 @@ internal void draw_rect(struct render_buffer *screen, u32 minx, u32 miny, u32 ma
 #define V2I_FMT "%d %d"
 #define V2I_(s) (s).x, (s.y)
 
-#define MAX_APPLES 10
-internal v2i apples[MAX_APPLES] = {};
-internal const u32 apple_num_index[SNAKE_WAVE_NUM] = {5,3,4,5};
-
-internal void reset_apples()
+internal void reset_apples(struct YkGame* game)
 {
     for(u32 i = 0; i < MAX_APPLES; i ++)
     {
-        apples[i] = (v2i){-100, -100};
+        game->apples[i] = (v2i){-100, -100};
     }
 }
 
-internal void randomise_apples(u32 width, u32 height, u32 num)
+internal void randomise_apples(struct YkGame* game ,u32 width, u32 height, u32 num)
 {
     for(u32 i = 0; i < num; i ++)
     {
-        apples[i] = (v2i){lcg_rand() % width,lcg_rand() % height};
+        game->apples[i] = (v2i){lcg_rand() % width,lcg_rand() % height};
     }
 }
 
@@ -54,11 +50,11 @@ internal void draw_bar(struct render_buffer* screen, struct YkGame *game)
     draw_rect(screen, _lb.x ,_lb.y, _lb.x + 4, _lb.y + 4, 0xFFFFFFFF);
 }
 
-internal void draw_apples(struct render_buffer * screen, u32 color)
+internal void draw_apples(struct YkGame* game, struct render_buffer * screen, u32 color)
 {
     for(u32 i = 0; i < MAX_APPLES; i ++)
     {
-        draw_rect(screen, apples[i].x, apples[i].y, apples[i].x + 2, apples[i].y + 2, color);
+        draw_rect(screen, game->apples[i].x, game->apples[i].y, game->apples[i].x + 2, game->apples[i].y + 2, color);
     }
 }
 
@@ -70,11 +66,11 @@ internal void snake_apple_collision(struct YkGame* game, const u32 apple_num, b8
     // check and eat apple. using broadphase SAT AABB. Might optmize with quadtrees
     for(u32 i = 0; i < apple_num; i ++)
     {
-        if((abs(snek->pos[0].x - apples[i].x) < 4) && ((abs(snek->pos[0].y - apples[i].y) < 4)))
+        if((abs(snek->pos[0].x - game->apples[i].x) < 4) && ((abs(snek->pos[0].y - game->apples[i].y) < 4)))
         {
             
-            apples[i].x = -100; //lcg_rand() % screen->width;
-            apples[i].y = -100; //lcg_rand() % screen->height;
+            game->apples[i].x = -100; //lcg_rand() % screen->width;
+            game->apples[i].y = -100; //lcg_rand() % screen->height;
             
             if(grow)
             {
@@ -100,12 +96,17 @@ internal void game_data_clone(struct YkGame* dst, struct YkGame* src)
     dst->eaten       = src->eaten;
     dst->msg_index   = src->msg_index;
     dst->msg_last    = src->msg_last;
-    dst->level       = src->level;
-    dst->timer       = src->timer;
     
+    for(u32 i = 0; i < MAX_APPLES; i++)
+    {
+        dst->apples[i] = src->apples[i];
+    }
+    
+    dst->level       = src->level;
+    
+    dst->timer       = src->timer;
     strcpy(dst->bgm,src->bgm);
     strcpy(dst->alert_sound,src->alert_sound);
-    
     dst->width       = src->width;
     dst->height      = src->height;
     dst->saved       = src->saved;
@@ -203,8 +204,8 @@ void load_level(struct YkGame* game)
         }break;
         case LEVEL_SNAKE:
         {
-            reset_apples();
-            randomise_apples(80, 60, apple_num_index[game->wave]);
+            reset_apples(game);
+            randomise_apples(game,80, 60, apple_num_index[game->wave]);
             struct snake *snek = &game->snek;
             snek->size = 10;
             snek->dir = (v2i){1, 0};
@@ -354,7 +355,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                         
                         //draw my life
                         RENDER_STATIC(screen, STATIC_MODE_MIXED);
-                        draw_apples(screen, WHITE);
+                        draw_apples(game,screen, WHITE);
                         snake_mv(game,input);
                         // check and eat apple. using broadphase SAT AABB. Might optmize with quadtrees
                         snake_apple_collision(game, apple_num_index[game->wave],1);
@@ -439,8 +440,8 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                             //send_msg(game, MSG_SNAKE_3);
                             game->wave ++;
                             game->eaten = 0;
-                            reset_apples();
-                            randomise_apples(80,30,apple_num_index[game->wave]);
+                            reset_apples(game);
+                            randomise_apples(game,80,30,apple_num_index[game->wave]);
                             snek->pos[0] = loading_bar;
                             break;
                         }
@@ -452,7 +453,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                     case SNAKE_WAVE_3:
                     {
                         RENDER_STATIC(screen, STATIC_MODE_MIXED_2);
-                        draw_apples(screen, WHITE);
+                        draw_apples(game,screen, WHITE);
                         snake_mv(game,input);
                         snake_apple_collision(game,apple_num_index[game->wave],0);
                         
