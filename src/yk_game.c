@@ -234,7 +234,7 @@ void load_level(struct YkGame* game)
             snek->dir = (v2i){1, 0};
             snek->pos[0] = loading_bar;
             
-            game->platform_set_title(game->_win, messages[MSG_SNAKE_0]);
+            game->platform_set_title(game->_win, messages[MSG_SNAKE_TRYING_TO_CONN]);
             
         }break;
         
@@ -308,7 +308,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                     game->platform_play_audio(game->bgm);
                 }
                 
-                if(game->msg_index == MSG_L2S1)
+                if(game->msg_index == MSG_INTRO_6 + 1)
                 {
                     game->level ++;
                     load_level(game);
@@ -372,7 +372,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                 switch (game->wave)
                 {
                     
-                    case SNAKE_WAVE_1:
+                    case SNAKE_WAVE_START:
                     {
                         snake_eat_self(snek);
                         
@@ -394,7 +394,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                         {
                             if(flag == 0)
                             {
-                                send_msg(game,MSG_SNAKE_0);
+                                send_msg(game,MSG_SNAKE_TRYING_TO_CONN);
                                 flag = 1;
                             }
                         }
@@ -402,14 +402,14 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                         {
                             if(flag == 1)
                             {
-                                send_msg(game,MSG_SNAKE_1);
+                                send_msg(game,MSG_SNAKE_LOST_CONN);
                                 flag = 0;
                             }
                             
                         }
                         
                     }break;
-                    case SNAKE_WAVE_BUFFER:
+                    case SNAKE_WAVE_ALIGN:
                     {
                         RENDER_STATIC(screen, STATIC_MODE_MIXED);
                         internal f32 eep_timer;
@@ -420,14 +420,14 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                             eep_timer += delta * 6;
                             if(eep_timer > 3.f)
                             {
-                                send_msg(game,MSG_L2S2);
+                                send_msg(game,MSG_SNAKE_ALIGN);
                                 snek->pos[0] = (v2i){-1,-1};
                                 game->wave ++;
                                 
                             }
                             if(flag == 0)
                             {
-                                send_msg(game,MSG_SNAKE_0);
+                                send_msg(game,MSG_SNAKE_TRYING_TO_CONN);
                                 flag = 1;
                             }
                         }
@@ -435,7 +435,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                         {
                             if(flag == 1)
                             {
-                                send_msg(game,MSG_SNAKE_1);
+                                send_msg(game,MSG_SNAKE_LOST_CONN);
                                 flag = 0;
                             }
                             eep_timer = 0;
@@ -448,7 +448,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                         
                         
                     }break;
-                    case SNAKE_WAVE_2:
+                    case SNAKE_WAVE_ALIGN_WAIT:
                     {
                         RENDER_STATIC(screen, STATIC_MODE_MIXED);
                         internal f32 counter;
@@ -474,7 +474,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                         
                         
                     }break;
-                    case SNAKE_WAVE_3:
+                    case SNAKE_WAVE_DEAD_PIXELS:
                     {
                         RENDER_STATIC(screen, STATIC_MODE_MIXED_2);
                         draw_apples(game,screen, WHITE,SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM);
@@ -484,8 +484,9 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                         internal b8 flag;
                         if(game->num_apples == 0 && !flag)
                         {
-                            send_msg(game,MSG_L2S3);
-                            game->msg_index = MSG_L2S4;
+                            
+                            send_msg(game,MSG_OUTRO_1);
+                            game->msg_index = MSG_OUTRO_2;
                             flag = 1;
                             game->level ++;
                         }

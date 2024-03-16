@@ -71,13 +71,18 @@ struct snake
 
 enum SNAKE_WAVE
 {
-    /*
-        starter apples
-    */
-    SNAKE_WAVE_1,
-    SNAKE_WAVE_BUFFER,
-    SNAKE_WAVE_2,
-    SNAKE_WAVE_3,
+    
+    //starter apples. After eating all the apples you go the next stage.
+    SNAKE_WAVE_START,
+    
+    // In this stage you align yourself with the bar. And when you are alligned you go to the next stage
+    SNAKE_WAVE_ALIGN,
+    
+    // After being aligned for a few seconds, you go to the next stage
+    SNAKE_WAVE_ALIGN_WAIT,
+    
+    // After eating all dead pixels, you complete this level
+    SNAKE_WAVE_DEAD_PIXELS,
     
     SNAKE_WAVE_NUM,
 };
@@ -86,8 +91,13 @@ typedef enum SNAKE_WAVE SNAKE_WAVE;
 
 enum LEVEL
 {
+    // The messages in the beginning before the snake game starts
     LEVEL_INTRO,
+    
+    // snake stage
     LEVEL_SNAKE,
+    
+    // After eating all dead pixels, you start the outro stage
     LEVEL_OUTRO,
 };
 
@@ -105,7 +115,12 @@ Note(facts): I was able to make modifications
 with very little effort. I think this way is fine.
 Only that I should use better names. MSG_INTRO_# is bad.
 Use actual names after MSG_INTRO.
+
+Also, maybe I can have something called sequences that have
+sequences enums. And another that just has messages. And these
+are more general messages.
 */
+
 enum YKMSG
 {
     MSG_INTRO_0,
@@ -116,14 +131,12 @@ enum YKMSG
     MSG_INTRO_5,
     MSG_INTRO_6,
     
-    MSG_SNAKE_0,
-    MSG_SNAKE_1, 
-    MSG_SNAKE_2,
+    //snake start, snake align
+    MSG_SNAKE_TRYING_TO_CONN,
+    MSG_SNAKE_LOST_CONN, 
     
-    //scrapped 
-    MSG_SNAKE_3,
-    
-    MSG_SNAKE_4,
+    //snake align wait
+    MSG_SNAKE_ALIGN,
     
     MSG_OUTRO_1,
     MSG_OUTRO_2,
@@ -132,20 +145,17 @@ enum YKMSG
     MSG_OUTRO_5,
     MSG_OUTRO_6,
     MSG_OUTRO_7,
+    MSG_OUTRO_8,
+    MSG_OUTRO_9,
+    MSG_OUTRO_10,
+    MSG_OUTRO_11,
     
     MSG_BYE ,
     
+    MSG_NUM
 };
 
 typedef enum YKMSG YKMSG;
-
-#define MSG_L1S1     (MSG_INTRO_0)
-#define MSG_L2S1     (MSG_SNAKE_0)
-#define MSG_L2S2     (MSG_SNAKE_2)
-#define MSG_L2S3     (MSG_SNAKE_4)
-#define MSG_L2S4     (MSG_OUTRO_1)
-
-#define NUM_MSG (NUM_MSG_1 + NUM_MSG_2)
 
 // I think i want to use a #define with strings
 // and have a "message index" for every stage
@@ -154,6 +164,8 @@ typedef enum YKMSG YKMSG;
 // very good names for the messages
 
 const char* messages[25] = {
+    
+    //intro
     "Welcome! This is a scripted sequence to help you with setup. Press the ENTER button on your remote",
     "Warning: Prolonged exposure to the Dear Dear Home System can lead to mild nausea, and in some cases loss of life",
     "In most cases, loss of loved ones, and in rare cases, loss of self being. Proceed with caution",
@@ -162,14 +174,17 @@ const char* messages[25] = {
     "Please don't leave",
     "Here is a song I wrote (for occasions like these)",
     
+    //snake start , snake align
     "Trying to connect",
     "Lost connection :(",
+    
+    //snake align wait
     "Connecting Super Fast!",
     
-    // scrapped
-    "It can still be faster",
-    
-    "Don't eat those pixels. They are dead. I am dying. Press enter to speed up",
+    //snake outro
+    "Those pixels are dead. I am dying.",
+    "If you eat them. I will get the pixels back.",
+    "I don't wan't to die. Can I have the pixels back?",
     
     "I am tired. I can't find channels at this rate",
     "I don't even know how to find channels",
@@ -185,22 +200,6 @@ const char* messages[25] = {
     "dear dear loves you",
     "Bye"
         
-        // this goes on till everything is black because pixels keep generating.
-        // And then you explore the puzzle
-        // But you will grow small and die if you don't eat pixels so you must eat pixels
-        // I will communicate with flashing red
-        // No No No
-        // you eat pixels. you get bigger in size. then they disappear. then you go back to horizontal
-        // way and then it says, "loading faster"
-        // more pixels appear
-        // "loading very fast"
-        // more pixels
-        // can't eat anymore
-        // i'm dying
-        // can't cross self perhaps either?
-        // I am tired. I have been up for a long time. I feel like shit. I've been barely
-        // getting by. I find this interesting enough to pursue so perhaps I will continue
-        // this in the future assuming I don't do the big no no
 };
 
 #define MAX_APPLES (10)
