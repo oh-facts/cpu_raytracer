@@ -44,11 +44,23 @@ struct YkInput
     b8 keys_old[YK_ACTION_COUNT];
 };
 
-#define snake_max_size 15
+
+//ToDo(facts): Often I overflow the stack.
+//I could use a ll. Or have an assert that
+//adds up all apples to guarantee that the
+// sum of apples + initial lenght is always
+// less than max size.
+// or the most sane thing, when eating apples,
+// put an upper limit on size. And print to
+// the console that this is technically undesired?
+// I only get the overflows when I am trying stuff
+// I don't really intend to have the snake game
+// long enough for this to matter.
+#define SNAKE_MAX_SIZE 15
 struct snake
 {   
     // 0 is head
-    v2i pos[snake_max_size];
+    v2i pos[SNAKE_MAX_SIZE];
     v2i dir;
     i32 size;
 };
@@ -191,12 +203,15 @@ const char* messages[25] = {
         // this in the future assuming I don't do the big no no
 };
 
-#define MAX_APPLES 10
+#define MAX_APPLES (10)
 
-// sort this out. I don't understand it. I don't remember
-// why I did it
-const u32 apple_num_index[SNAKE_WAVE_NUM] = {5,3,4,5};
+#define SNAKE_LEVEL_START_APPLE_NUM      (6)
+#define SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM (4)
 
+// ToDo(facts): Instead of having next wave initialization data inside the  if inside waves to go to the next wave,
+// make a next_wave function that is similar to next level load.
+// or heck just have a nested switch inside load level and change waves.
+// I like that more actually
 struct YkGame
 {
     // stage 0;
@@ -209,7 +224,7 @@ struct YkGame
     u32 msg_index;
     u32 msg_last;
     v2i apples[MAX_APPLES];
-    
+    u32 num_apples;
     
     LEVEL level;
     
