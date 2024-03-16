@@ -398,20 +398,18 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                         snake_apple_collision(game, SNAKE_LEVEL_START_APPLE_NUM ,1);
                         
                         
-                        local_persist u8 flag;
-                        local_persist f32 eep_timer;
                         if(snake_loading_bar_collision(snek))
                         {
-                            if(flag == 0)
+                            if(game->last_msg != MSG_SNAKE_TRYING_TO_CONN)
                             {
                                 send_msg(game,MSG_SNAKE_TRYING_TO_CONN);
-                                flag = 1;
                             }
                             
-                            //come back
+                            //ToDo(facts): rework
                             //delta * 6 is 1 second.
-                            eep_timer += delta * 6 * (((snek->size - 3)/(9 - 3.f)) * (180 - 3) + 3);
-                            if(eep_timer > 180 * 3)
+                            game->align_timer += delta * (6/3.f) * (((snek->size - 3)/(9 - 3.f)) * (180 - 3) + 3);
+                            
+                            if(game->align_timer > 180)
                             {
                                 send_msg(game,MSG_SNAKE_ALIGN);
                                 snek->pos[0] = (v2i){-1,-1};
@@ -423,12 +421,11 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                         }
                         else
                         {
-                            if(flag == 1)
+                            if(game->last_msg != MSG_SNAKE_LOST_CONN)
                             {
                                 send_msg(game,MSG_SNAKE_LOST_CONN);
-                                flag = 0;
                             }
-                            eep_timer = 0;
+                            game->align_timer= 0;
                             
                         }
                         

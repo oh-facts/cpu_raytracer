@@ -204,7 +204,7 @@ const char* messages[25] = {
 
 #define MAX_APPLES (10)
 
-#define SNAKE_LEVEL_START_APPLE_NUM      (8)
+#define SNAKE_LEVEL_START_APPLE_NUM      (6)
 #define SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM (3)
 
 // ToDo(facts): Instead of having next wave initialization data inside the  if inside waves to go to the next wave,
@@ -224,6 +224,10 @@ struct YkGame
     u32 msg_last;
     v2i apples[MAX_APPLES];
     u32 num_apples;
+    
+    //wavestart
+    f32 align_timer;
+    b8 align_msg_flag;
     
     LEVEL level;
     

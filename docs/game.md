@@ -6,10 +6,12 @@ Idea: I make it so that you will connect after a certain amount of time always. 
 So, the dead pixel goes like this. After you collect 3 and lose 3 of your own.
 It progresses to the outro after which you get a "special pixel" and the snake arc ends. Now, if you weren't able to kill yourself after 3 pixels, nothing happens. You just waste time in obscurity. special pixel is pink because television loves you now.
 There are bugs in the logic. It works fine otherwise. Just playtest and find. The puzzle is in a good place I think.
+The bugs were fixed. I need to add the "thank you + pink pixel stage"
  	
 6.hot reloading
 8.work on doing audio properly. this is neccessary to pause audio.
 9.remove local_persist variables. that is also global state
+10. Separating game api code from actual game code (Not too inclined since I don't see myself making another game with this engine)
 
 Things I added
 // 3/15/24
