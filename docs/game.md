@@ -4,8 +4,7 @@
 
 
 6.hot reloading
-
-7. remove all global data that shouldn't be global data
+8.work on doing audio properly. this is neccessary to pause audio.
 
 Things I added
 // 3/15/24
@@ -13,5 +12,6 @@ Things I added
 2. If he does, he cuts off those bits. This will be used in a puzzle for times when you need to be a specific size.
 4.Saving thing (Dialogue + functionality)
 5.Restarting
+7.remove all global data that shouldn't be global data
 
 --!>

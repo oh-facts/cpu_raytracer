@@ -221,6 +221,7 @@ struct YkGame
     i32 height;
     
     struct YkGame* saved;
+    YKMSG last_msg;
     
     //platform
     void * _win;

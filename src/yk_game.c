@@ -11,6 +11,7 @@ internal u32 lcg_rand();
 #define BLACK (0xFF000000)
 
 void load_level(struct YkGame* game);
+internal void send_msg(struct YkGame* game, YKMSG msg);
 
 #define RENDER_STATIC(screen, mode) \
 _render_static_##mode(screen)
@@ -92,8 +93,10 @@ internal void snake_apple_collision(struct YkGame* game, const u32 apple_num, b8
 internal void game_data_clone(struct YkGame* dst, struct YkGame* src)
 {
     dst->loading_bar = src->loading_bar;
+    
     dst->snek        = src->snek;
     dst->eaten       = src->eaten;
+    dst->wave        = src->wave;
     dst->msg_index   = src->msg_index;
     dst->msg_last    = src->msg_last;
     
@@ -109,23 +112,27 @@ internal void game_data_clone(struct YkGame* dst, struct YkGame* src)
     strcpy(dst->alert_sound,src->alert_sound);
     dst->width       = src->width;
     dst->height      = src->height;
-    dst->saved       = src->saved;
-    dst->_win        = src->_win;
     
+    dst->saved       = src->saved;
+    dst->last_msg    = src->last_msg;
+    
+    dst->_win        = src->_win;
     dst->platform_play_audio = src->platform_play_audio;
     dst->platform_set_title = src->platform_set_title;
+    
 }
 
 internal void game_data_save(struct YkGame* game)
 {
-    printl("saved game");
+    printl("saving");
     game_data_clone(game->saved,game);
 }
 
 internal void game_data_restore(struct YkGame* game)
 {
-    printl("restore game");
+    printl("restoring");
     game_data_clone(game,game->saved);
+    send_msg(game, game->last_msg);
 }
 
 internal b8 snake_loading_bar_collision(struct snake* snek)
@@ -170,17 +177,14 @@ internal void snake_eat_self(struct snake* snek)
 
 internal void send_msg(struct YkGame* game, YKMSG msg)
 {
-    
     game->platform_set_title(game->_win, messages[msg]);
+    game->last_msg  = msg;
     game->platform_play_audio(game->alert_sound);
     //printf("w");
 }
 
 YK_API void yk_innit_game(struct YkGame *game)
 {
-    //ToDo(facts): remove allocations
-    game->saved = malloc(sizeof(struct YkGame));
-    
     strcpy(game->bgm,"../res/song0.wav");
     strcpy(game->alert_sound, "../res/GameAlert.wav");
     
@@ -188,6 +192,11 @@ YK_API void yk_innit_game(struct YkGame *game)
     game->width = 80;
     game->height = 60;
     //game->wave = SNAKE_WAVE_3;
+    
+    //ToDo(facts): remove allocations
+    game->saved = malloc(sizeof(struct YkGame));
+    game_data_save(game);
+    
     load_level(game);
 }
 
