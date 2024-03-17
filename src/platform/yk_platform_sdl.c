@@ -1,10 +1,10 @@
-#include <yk_sdl2_include.h>
+#include <final_platform_layer.h>
 #include <miniaudio.h>
 #include <yk_common.h>
 #include <yk_game.h>
 #include <stb_truetype.h>
 
-#define DEBUG_SDL_CHECK 1
+#define DEBUG_SDL_CHECK 0
 #define LOG_STATS       0
 
 #if DEBUG_SDL_CHECK
@@ -14,6 +14,9 @@
 #define SDL_CHECK_RES(expr) expr
 #define SDL_CHECK(expr)
 #endif
+
+
+
 
 void render_bitmap(struct render_buffer *screen, u32 posx, u32 posy, u32 width, u32 height, u32 *bitmap)
 {
