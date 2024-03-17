@@ -2,6 +2,7 @@
 #include <miniaudio.h>
 #include <yk_common.h>
 #include <yk_game.h>
+#include <stb_truetype.h>
 
 #define DEBUG_SDL_CHECK 1
 #define LOG_STATS       0
@@ -13,6 +14,73 @@
 #define SDL_CHECK_RES(expr) expr
 #define SDL_CHECK(expr)
 #endif
+
+void render_bitmap(struct render_buffer *screen, u32 posx, u32 posy, u32 width, u32 height, u32 *bitmap)
+{
+    u32 minx = posx;
+    u32 miny = posy;
+    u32 maxx = posx + width;
+    u32 maxy = posy + height;
+    
+    minx = (minx < 0) ? 0 : minx;
+    miny = (miny < 0) ? 0 : miny;
+    maxx = (maxx > screen->width) ? screen->width : maxx;
+    maxy = (maxy > screen->height) ? screen->height : maxy;
+    
+    u8 *row = (u8 *)screen->pixels + miny * (screen->width * 4) + minx * 4;
+    
+    for (u32 y = miny; y < maxy; y++)
+    {
+        u32 *pixel = (u32 *)row;
+        
+        for (u32 x = minx; x < maxx; x++)
+        {
+            *pixel++ = *bitmap;
+            bitmap += 4;
+        }
+        row += screen->width * 4;
+    }
+}
+
+
+
+
+unsigned char* ttf_buffer;
+u8* renderText() {
+    
+    FILE* font_file = fopen("../res/minecraft.ttf", "rb");
+    fread(ttf_buffer, 1, 1<<20, font_file);
+    fclose(font_file);
+    
+    stbtt_fontinfo font;
+    stbtt_InitFont(&font, ttf_buffer, stbtt_GetFontOffsetForIndex(ttf_buffer,0));
+    
+    int w,h,xo,yo;
+    u8* bitmap = stbtt_GetCodepointBitmap(&font, 0,stbtt_ScaleForPixelHeight(&font, 20.f), 'N', &w, &h, &xo, &yo);
+    
+    u8* src = bitmap;
+    u8* a = malloc(sizeof(u32) * w * h);
+    u8* DestRow = a;
+    for(u32 y = 0; y < h; y ++)
+    {
+        u32 *Dest = (u32*)DestRow;
+        for(u32 x = 0; x < w; x ++)
+        {
+            u8 Alpha = *src++;
+            *Dest++ = ((Alpha << 24) |
+                       (Alpha << 16) |
+                       (Alpha << 8)  |
+                       (Alpha << 0) );
+        }
+        Dest += w * sizeof(u32);
+    }
+    
+    stbtt_FreeBitmap(bitmap,0);
+    
+    return a;
+}
+
+
 
 #define GAME_UPDATE_RATE (1/60.f)
 
@@ -34,7 +102,7 @@ void sdl_set_title(void* win, const char* title)
 int main(int argc, char *argv[])
 {
     // platform shit starts here ------------------------
-    
+    ttf_buffer = malloc(1<<20);
     f64 total_time_elapsed = 0;
     f64 dt = 0;
     
@@ -53,7 +121,6 @@ int main(int argc, char *argv[])
     if (result != MA_SUCCESS) {
         return -1;
     }
-    
     
     SDL_Surface *win_surf = SDL_GetWindowSurface(win);
     SDL_CHECK(win_surf);
@@ -84,6 +151,10 @@ int main(int argc, char *argv[])
     render_target.pixels = malloc(sizeof(u32) * render_target.height * render_target.width);
     
     SDL_Surface *render_surface = SDL_CreateRGBSurfaceFrom(render_target.pixels, render_target.width, render_target.height, 32, render_target.width * sizeof(u32), 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+    u8* text = renderText();
+    
+    u32* pixels = SDL_LoadBMP("../res/test.bmp")->pixels;
+    render_bitmap(&render_target,10,10,20,20,pixels);
     
     //--------------------
     // ugly fullscreen hack.
@@ -191,15 +262,23 @@ int main(int argc, char *argv[])
             }
         }
         
+        // ToDo(facts): store pitch inside render_buffer
+        
+        
+        game.font = text;
+        
         // game loop start--------
         local_persist f32 fixed_dt;
         fixed_dt += dt;
         
         if (fixed_dt > 1 / 60.f)
         {
+            render_target.pixels[0] = 0xFFFF0000;
             
-            yk_update_and_render_game(&render_target, &input, &game, GAME_UPDATE_RATE);
+            //yk_update_and_render_game(&render_target, &input, &game, GAME_UPDATE_RATE);
             fixed_dt = 0;
+            
+            //renderText("F", 20, 50);
             
             SDL_BlitScaled(render_surface, 0, win_surf, 0);
             

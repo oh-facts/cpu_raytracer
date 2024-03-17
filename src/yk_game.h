@@ -157,10 +157,7 @@ enum YKMSG
 typedef enum YKMSG YKMSG;
 
 // I think i want to use a #define with strings
-// and have a "message index" for every stage
-// for those moments when I need to track how many
-// messages have been shared. Also, I want to use
-// very good names for the messages
+// and map them to enums.
 
 const char* messages[25] = {
     
@@ -205,7 +202,7 @@ const char* messages[25] = {
 #define MAX_APPLES (10)
 
 #define SNAKE_LEVEL_START_APPLE_NUM      (6)
-#define SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM (3)
+#define SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM (4)
 
 // ToDo(facts): Instead of having next wave initialization data inside the  if inside waves to go to the next wave,
 // make a next_wave function that is similar to next level load.
@@ -232,7 +229,11 @@ struct YkGame
     LEVEL level;
     
     // world
+    // I have been misusing this value. Been modifying it willy nilly.
+    // Rework it. Or call it an apropriate name.
     f32 timer;
+    
+    // do audio properly. filepath arrays are disgusting.
     char bgm[32];
     char alert_sound[32];
     i32 width;
@@ -240,6 +241,8 @@ struct YkGame
     
     struct YkGame* saved;
     YKMSG last_msg;
+    
+    u8* font;
     
     //platform
     void * _win;

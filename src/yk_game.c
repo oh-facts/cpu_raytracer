@@ -383,7 +383,6 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
             if (game->timer > 1 / 12.f)
             {
                 game->timer = 0;
-                snake_eat_self(snek);
                 
                 switch (game->wave)
                 {
@@ -391,6 +390,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                     case SNAKE_WAVE_START:
                     {
                         //draw my life
+                        snake_eat_self(snek);
                         RENDER_STATIC(screen, STATIC_MODE_MIXED);
                         draw_apples(game,screen, WHITE,SNAKE_LEVEL_START_APPLE_NUM);
                         snake_mv(game,input);
@@ -465,9 +465,9 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                     {
                         RENDER_STATIC(screen, STATIC_MODE_MIXED_2);
                         draw_apples(game,screen, WHITE,SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM);
-                        snake_mv(game,input);
                         snake_apple_collision(game,SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM,0);
-                        
+                        snake_mv(game,input);
+                        snake_eat_self(snek);
                         //ToDo(facts): puke
                         if(game->eaten == 1 && game->last_msg!= MSG_DEAD_PIXELS_1)
                         {
