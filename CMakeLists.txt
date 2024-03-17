@@ -20,7 +20,7 @@ set(yk_src  "src/yk_arena.c" "src/yk_game.c" "src/yk_arena.c")
 
 add_library(${PROJECT_NAME} SHARED ${yk_src} ${yk_platform}) 
 
-add_executable(yk_test "src/platform/yk_platform_sdl.c" "vendor/miniaudio/miniaudio.c" "vendor/stb/stb_truetype.c" "vendor/final_platform_layer/final_platform_layer.c")
+add_executable(yk_test "src/platform/yk_platform.c" "vendor/miniaudio/miniaudio.c" "vendor/stb/stb_truetype.c" "vendor/final_platform_layer/final_platform_layer.c")
 
 if(WIN32)
     target_link_libraries(yk_test yk2)
