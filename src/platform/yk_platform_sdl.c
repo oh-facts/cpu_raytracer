@@ -109,10 +109,8 @@ int main(int argc, char *argv[])
     f64 total_time_elapsed = 0;
     f64 dt = 0;
     
-    //SDL_CHECK_RES(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO));
-    //fplPlaformInit();
+    SDL_CHECK_RES(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO));
     
-    /*
     SDL_Window *win = SDL_CreateWindow(
                                        "television",
                                        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600,
@@ -120,17 +118,17 @@ int main(int argc, char *argv[])
     
     SDL_CHECK(win);
     
-    */
+    
     
     result = ma_engine_init(NULL, &engine);
     if (result != MA_SUCCESS) {
         return -1;
     }
     
-    //SDL_Surface *win_surf = SDL_GetWindowSurface(win);
-    //SDL_CHECK(win_surf);
+    SDL_Surface *win_surf = SDL_GetWindowSurface(win);
+    SDL_CHECK(win_surf);
     
-    //SDL_Event event;
+    SDL_Event event;
     b8 quit = 0;
     
     f32 a_ratio = 8 / 6.f;
