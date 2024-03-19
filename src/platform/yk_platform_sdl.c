@@ -1,7 +1,7 @@
-#include <yk_sdl2_include.h>
-#include <miniaudio.h>
-#include <yk_common.h>
-#include <yk_game.h>
+#include "yk_sdl2_include.h"
+#include "miniaudio.h"
+#include "yk_common.h"
+#include "yk_game.h"
 
 #define DEBUG_SDL_CHECK 1
 #define LOG_STATS       0

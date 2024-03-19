@@ -1,4 +1,4 @@
-#include <yk_game.h>
+#include "yk_game.h"
 
 internal u32 g_seed = 42;
 internal u32 test_rand();

@@ -1,8 +1,8 @@
 #ifndef YK_GAME_H
 #define YK_GAME_H
 
-#include <yk_common.h>
-#include <yk_arena.h> 
+#include "yk_common.h"
+#include "yk_arena.h"
 union v2i
 {
     struct
