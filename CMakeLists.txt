@@ -23,7 +23,7 @@ include_directories(
     )
 
 
-set(yk_src  "src/yk_arena.c" "src/yk_game.c" "src/yk_arena.c")
+set(yk_src "src/yk_arena.c" "src/yk_game.c")
 
 add_library(${PROJECT_NAME} SHARED ${yk_src} ${yk_platform}) 
 
