@@ -23,6 +23,7 @@ add_library(${PROJECT_NAME} SHARED "src/yk_game.c")
 
 add_executable(yk_test "src/platform/yk_platform_sdl.c" "src/platform/yk_platform_miniaudio.c")
 
+
 if(WIN32)
     target_link_libraries(yk_test SDL2main SDL2 SDL2_ttf)
 endif()

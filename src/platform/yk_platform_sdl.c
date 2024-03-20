@@ -167,8 +167,16 @@ void sdl_set_title(void* win, const char* title)
     SDL_SetWindowTitle(win, title);
 }
 
+#if _WIN32
+#include <Windows.h>
+#endif
+
 int main(int argc, char *argv[])
 {
+    // FUCK MICROSOFT (John Malkovitch voice)
+#if _WIN32
+    SetProcessDPIAware();
+#endif
     
     // platform shit starts here ------------------------
     struct sdl_platform platform = {0};
@@ -184,13 +192,19 @@ int main(int argc, char *argv[])
         printf("%s",SDL_GetError());
     }
     
+    const u32 tv_w  = 8;
+    const u32 tv_h  = 6;
+    const u32 pad_w = 4; // 4 on each side
+    const u32 pad_h = 3;
+    const u32 win_w = tv_w + 2 * pad_w;
+    const u32 win_h = tv_h + pad_h;
+    
     SDL_Window *win = SDL_CreateWindow(
                                        "television",
-                                       SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600,
-                                       0);
+                                       SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 960, 540,
+                                       SDL_WINDOW_RESIZABLE);
     
     SDL_CHECK(win);
-    
     
     result = ma_engine_init(NULL, &engine);
     if (result != MA_SUCCESS) {
@@ -202,9 +216,6 @@ int main(int argc, char *argv[])
     
     SDL_Event event;
     b8 quit = 0;
-    
-    f32 a_ratio = 8 / 6.f;
-    
     
     //-----------------------------platform shit ends here
     
@@ -243,10 +254,6 @@ int main(int argc, char *argv[])
         printf("%s",SDL_GetError());
     }
     
-    SDL_Rect dstRect;
-    
-    
-    //SDL_BlitScaled(pixels, 0, render_surface, &dst);
     
     struct bitmap bmp = read_bitmap_file("../res/test.bmp",&game.arena);
     
@@ -262,20 +269,13 @@ int main(int argc, char *argv[])
     }
 #endif
     SDL_Surface *bmo = SDL_CreateRGBSurfaceFrom(bmp.pixels, bmp.width, bmp.height, 32, bmp.width * sizeof(u32), 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-    /*
-    dstRect.x = 22;
-    dstRect.y = 0;
-    dstRect.w = bmo->w / 30;
-    dstRect.h = bmo->h / 30;
     
-    
-    SDL_BlitScaled(bmo,0, win_surf, &dstRect.x);
-    
-    SDL_UpdateWindowSurface(win);
-    */
     SDL_DisplayMode dm;
     
     u8 isF = 0;
+    
+    i32 width, height;
+    SDL_GetWindowSize(win, &width, &height);
     
     while (!quit)
     {
@@ -345,11 +345,16 @@ int main(int argc, char *argv[])
                                 {
                                     isF = 1;
                                     SDL_SetWindowFullscreen(win, SDL_WINDOW_FULLSCREEN_DESKTOP);
+                                    
                                 }
                                 else
                                 {
                                     isF = 0;
                                     SDL_SetWindowFullscreen(win, 0);
+                                    SDL_SetWindowSize(win,960,540);
+                                    SDL_GetWindowSize(win, &width, &height);
+                                    SDL_SetWindowPosition(win, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+                                    
                                 }
                             }
                         }break;
@@ -382,19 +387,33 @@ int main(int argc, char *argv[])
                     
                 }break;
                 
+                //ToDO:width resizing does not work
                 case SDL_WINDOWEVENT:
                 {
-                    win_surf = SDL_GetWindowSurface(win);
-                    SDL_CHECK(win_surf);
-                    SDL_GetDesktopDisplayMode(0, &dm);
+                    switch (event.window.event)
+                    {
+                        case SDL_WINDOWEVENT_RESIZED:
+                        {
+                            win_surf = SDL_GetWindowSurface(win);
+                            SDL_CHECK(win_surf);
+                            SDL_GetDesktopDisplayMode(0, &dm);
+                            SDL_GetWindowSize(win, &width, &height);
+                            
+                            if(width < 800)
+                            {
+                                width = 800;
+                                SDL_SetWindowSize(win, width, height);
+                            }
+                            
+                        }break;
+                    }
                 }break;
+                
+                
             }
         }
         
         // ToDo(facts): store pitch inside render_buffer
-        
-        
-        //game.font = text;
         
         // game loop start--------
         local_persist f32 fixed_dt;
@@ -407,57 +426,47 @@ int main(int argc, char *argv[])
             platform.update_and_render_game(&render_target, &input, &game, GAME_UPDATE_RATE);
             fixed_dt = 0;
             
-            //renderText("F", 20, 50);
-            if(isF)
             {
                 
-                u32 dh = dm.h * 4/5.f;
+                //Note(facts): Not to happy with this. Move it to one of the events
+                win_surf = SDL_GetWindowSurface(win);
                 
-                dstRect.x = dm.w / 2 - text->w/2;    
-                dstRect.y = dh;    
-                dstRect.w = text->w;
-                dstRect.h = text->h;
+                
+                //tv render
+                SDL_Rect ren_rect;
+                
+                ren_rect.h = height - (height /pad_h*1.f) * (0.6f);
+                ren_rect.w = ren_rect.h * (tv_w*1.f/tv_h) ;
+                ren_rect.x = (width - ren_rect.w)/2;
+                ren_rect.y = 0;
+                SDL_BlitScaled(render_surface, 0, win_surf, &ren_rect);
+                
+                //debug text 1
+                SDL_Rect dstRect;
+                dstRect.x = width/2 - text->w/2;    
+                dstRect.y = ren_rect.h;    
+                dstRect.w = 0;
+                dstRect.h = 0;
                 
                 SDL_BlitSurface(text, 0, win_surf, &dstRect);
-                printf("%s",SDL_GetError());
                 
-                dstRect.x = dm.w / 2 - text->w/2;  
-                dstRect.y = dh + 2 + text->h;
-                dstRect.w = text->w;
-                dstRect.h = text->h;
+                //debug text 2
+                dstRect.x = width/2 - text->w/2;  
+                dstRect.y = ren_rect.h;
+                dstRect.w = 0;
+                dstRect.h = 0;
                 
                 SDL_BlitSurface(text2, 0, win_surf, &dstRect);
                 
-                dstRect.x = 25;
-                dstRect.y = 200;
-                dstRect.w = bmo->w / 4;
-                dstRect.h = bmo->h / 4;
                 
-                
-                SDL_BlitScaled(bmo,0, win_surf, &dstRect);
-                
-                
-                dstRect.x = win_surf->w - 25 - bmo->w/4;
-                dstRect.y = 200;
-                dstRect.w = bmo->w / 4;
-                dstRect.h = bmo->h / 4;
-                
-                
-                SDL_BlitScaled(bmo,0, win_surf, &dstRect);
-                
-                SDL_Rect dest = {0};
-                //printl("%d %d",dm.w,dm.h);
-                dest.w = dh * 4/3.f;
-                dest.h = dh;
-                dest.x = (dm.w - dest.w)/2 ;
-                
-                SDL_BlitScaled(render_surface, 0, win_surf, &dest);
-                
-                
-            }
-            else
-            {
-                SDL_BlitScaled(render_surface, 0, win_surf, 0);
+                /*
+                                                                                                u32 tv_w = 8;
+                                                                                    u32 tv_h = 6;
+                                                                                    u32 pad_w = 4; // 4 on each side
+                                                                                    u32 pad_h = 3;
+                                                                                    u32 win_w = 16;
+                                                                                    u32 win_h = 9;
+                                                                                       */
             }
             
             // Might fail. Leaving it like this until it doesn't

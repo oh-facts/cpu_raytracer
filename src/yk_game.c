@@ -19,15 +19,16 @@ internal u32 lcg_rand();
 void load_level(struct YkGame* game);
 internal void send_msg(struct YkGame* game, YKMSG msg);
 
-#define RENDER_STATIC(screen, mode) \
-_render_static_##mode(screen,delta)
+#define RENDER_STATIC(screen, game,mode) \
+_render_static_##mode(screen, game,delta)
 
-internal void _render_static_STATIC_MODE_BASIC(struct render_buffer * screen, f32 delta);
+internal void _render_static_STATIC_MODE_BASIC(struct render_buffer * screen, struct YkGame* game, f32 delta);
+/*
 internal void _render_static_STATIC_MODE_HALF(struct render_buffer * screen,f32 delta);
 internal void _render_static_STATIC_MODE_MIXED(struct render_buffer * screen, f32 delta);
 internal void _render_static_STATIC_MODE_MIXED_2(struct render_buffer * screen, f32 delta);
 internal void _render_static_STATIC_MODE_BLACK(struct render_buffer * screen,f32 delta);
-
+*/
 internal void draw_rect(struct render_buffer *screen, u32 minx, u32 miny, u32 maxx, u32 maxy, u32 rgba);
 
 #define V2I_FMT "%d %d"
@@ -113,27 +114,36 @@ internal void snake_apple_collision(struct YkGame* game, const u32 apple_num, b8
         //printl("%d: "V2I_FMT,i,V2I_(game->apples[i]));
     }
 }
-
+//ToDo(facts): Metaprogram this
 //Deeps clone game data. Exists so I can save.
 internal void game_data_clone(struct YkGame* dst, struct YkGame* src)
 {
+    dst->opa = src->opa;
+    
     dst->loading_bar = src->loading_bar;
+    dst->loading_bar_color = src->loading_bar_color;
     
     dst->snek        = src->snek;
     dst->eaten       = src->eaten;
     dst->wave        = src->wave;
     dst->msg_index   = src->msg_index;
     dst->msg_last    = src->msg_last;
-    
     for(u32 i = 0; i < MAX_APPLES; i++)
     {
         dst->apples[i] = src->apples[i];
     }
     dst->num_apples = src->num_apples;
     
+    dst->align_timer      = src->align_timer;
+    dst->align_msg_flag   = src->align_msg_flag;
+    
+    dst->align_wait_timer = src->align_wait_timer;
+    dst->align_wait_flag  = src->align_wait_flag;
+    
     dst->level       = src->level;
     
     dst->timer       = src->timer;
+    
     strcpy(dst->bgm,src->bgm);
     strcpy(dst->alert_sound,src->alert_sound);
     dst->width       = src->width;
@@ -142,10 +152,14 @@ internal void game_data_clone(struct YkGame* dst, struct YkGame* src)
     dst->saved       = src->saved;
     dst->last_msg    = src->last_msg;
     
+    dst->arena       = src->arena;
+    memcpy(dst->arena.base, src->arena.base,dst->arena.used);
+    
+    // why am I doing this? This is platform. game doesn't
+    //care about this
     dst->_win        = src->_win;
     dst->platform_play_audio = src->platform_play_audio;
     dst->platform_set_title = src->platform_set_title;
-    
 }
 
 internal void game_data_save(struct YkGame* game)
@@ -228,9 +242,10 @@ void yk_innit_game(struct YkGame *game)
     //game->wave = SNAKE_WAVE_3;
     game->loading_bar_color = 0xFFFFFFFF;
     
+    load_level(game);
+    
     game->saved = push_struct(&game->arena, game);
     game_data_save(game);
-    load_level(game);
 }
 
 void load_level(struct YkGame* game)
@@ -355,7 +370,7 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
             if (game->timer > 1 / 12.f)
             {
                 game->timer = 0;
-                RENDER_STATIC(screen, STATIC_MODE_BASIC);
+                RENDER_STATIC(screen, game,STATIC_MODE_BASIC);
                 
                 //loading bar
                 if(game->msg_index > MSG_INTRO_3)
@@ -401,7 +416,7 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
                     {
                         //draw my life
                         snake_eat_self(snek);
-                        RENDER_STATIC(screen, STATIC_MODE_MIXED);
+                        RENDER_STATIC(screen, game, STATIC_MODE_BASIC);
                         draw_apples(game,screen, WHITE,SNAKE_LEVEL_START_APPLE_NUM);
                         snake_mv(game,input);
                         // check and eat apple. using broadphase SAT AABB. Might optmize with quadtrees
@@ -447,16 +462,15 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
                     }break;
                     case SNAKE_WAVE_ALIGN_WAIT:
                     {
-                        RENDER_STATIC(screen, STATIC_MODE_MIXED);
-                        internal f32 counter;
-                        counter += delta * 4;
+                        RENDER_STATIC(screen,game, STATIC_MODE_BASIC);
+                        game->align_wait_timer += delta * 4;
                         
                         game->loading_bar.x = game->loading_bar.x < screen->width ? game->loading_bar.x + SNAKE_SPEED : 0;
                         draw_bar(screen,game);
-                        internal b8 flag;
-                        if(counter > 3 && !flag)
+                        
+                        if(game->align_wait_timer > 3 && !game->align_wait_flag)
                         {
-                            flag = 1;
+                            game->align_wait_flag = 1;
                             //send_msg(game, MSG_SNAKE_3);
                             game->wave ++;
                             game->eaten = 0;
@@ -473,7 +487,7 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
                     }break;
                     case SNAKE_WAVE_DEAD_PIXELS:
                     {
-                        RENDER_STATIC(screen, STATIC_MODE_MIXED_2);
+                        RENDER_STATIC(screen, game,STATIC_MODE_BASIC);
                         draw_apples(game,screen, WHITE,SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM);
                         snake_apple_collision(game,SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM,0);
                         snake_mv(game,input);
@@ -531,7 +545,7 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
             timer += delta;
             if(timer > 1/12.f)
             {
-                RENDER_STATIC(screen, STATIC_MODE_BLACK);
+                RENDER_STATIC(screen, game, STATIC_MODE_BASIC);
                 game->loading_bar.x = game->loading_bar.x < screen->width ? game->loading_bar.x + SNAKE_SPEED : 0;
                 draw_bar(screen,game);
                 
@@ -675,11 +689,10 @@ for (u32 j = 0; j < width; j++) \
 
 
 #define _STATIC_MODE_BASIC \
-static u32 opa; \
-opa +=delta * 100; \
-opa = opa > 255 ? 0 : opa;\
+game->opa +=delta * 100; \
+game->opa = game->opa > 255 ? 0 : game->opa;\
 /*printl("%d",opa);*/\
-pixel = (0xFF << 24) | ( (100) << 16) | ((36 - opa) << 8) | opa - 12;
+pixel = (0xFF << 24) | ( (100) << 16) | ((36 - game->opa) << 8) | game->opa - 12;
 
 #define _STATIC_MODE_MIXED                                                                                 \
 if (j % 2 == 0)                                                                     \
@@ -745,13 +758,13 @@ pixels[width * i + j] = pixel;\
 
 
 
-void _render_static_STATIC_MODE_BASIC(struct render_buffer * screen, f32 delta)
+void _render_static_STATIC_MODE_BASIC(struct render_buffer * screen, struct YkGame* game, f32 delta)
 {
     _RENDER_STATIC_ONE
         _STATIC_MODE_BASIC
         _RENDER_STATIC_END
 }
-
+/*
 void _render_static_STATIC_MODE_MIXED(struct render_buffer * screen, f32 delta)
 {
     _RENDER_STATIC_ONE
@@ -779,7 +792,7 @@ void _render_static_STATIC_MODE_BLACK(struct render_buffer * screen, f32 delta)
         _STATIC_MODE_BLACK 
         _RENDER_STATIC_END
 }
-
+*/
 // metaprogramming sin ends here.
 
 

@@ -210,6 +210,9 @@ const char* messages[25] = {
 // I like that more actually
 struct YkGame
 {
+    //render context
+    u32 opa;
+    
     // stage 0;
     v2i loading_bar;
     u32 loading_bar_color;
@@ -227,6 +230,12 @@ struct YkGame
     f32 align_timer;
     b8 align_msg_flag;
     
+    //align wait
+    f32 align_wait_timer;
+    b8 align_wait_flag;
+    
+    // outro
+    
     LEVEL level;
     
     // world
@@ -243,13 +252,12 @@ struct YkGame
     struct YkGame* saved;
     YKMSG last_msg;
     
-    u8* font;
+    struct Arena arena;
     
     //platform
     void * _win;
     void (*platform_play_audio)(const char* path);
     void (*platform_set_title)(void * win, const char* title);
-    struct Arena arena;
     
 };
 
