@@ -14,6 +14,7 @@ if(WIN32)
 endif()
 if(UNIX)
     find_package(SDL2 REQUIRED)
+	find_package(SDL2_ttf REQUIRED)
 endif()
 
 include_directories(
