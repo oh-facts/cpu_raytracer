@@ -1,17 +1,17 @@
 I know what the title says but that is too ambitious of a project. I lack both the skill and the time.
 
-
 ## Software Rasterizer
 
 I render to a pixel buffer and then blit it to the window's surface. I use sdl2 for the platform layer and
-miniaudio for audio, which is a embedded inside `vendor/`. I don't actually rasterize yet. I am a deceitful cheat, among other things.
+miniaudio for audio, and sdl_ttf to render text, all embedded inside `vendor/`. I don't actually rasterize yet. I am a deceitful cheat, among other things.
 
 I am using it to make a game for the Acerola Game Jam.
 
 ## compile
 
-All dependencies are inside vendor/
-They must be downloaded since SDL2 is making my life hard and SDL2_ttf's cmake is making my life harder. Single header libraries are making me hard and I wish every library used a tool to generate a single header library to ship with.
+All dependencies are inside `vendor/`.
+
+They must be downloaded since SDL2 is making my life hard and SDL2_ttf's cmake is making my life harder and single header libraries are making me hard and I wish every library used a tool to generate a single header library to ship with (They can develop with multiple source/header files, but ship as a single header)
 
 You will have to clone the repo like this -
 
@@ -42,8 +42,20 @@ cmake .. -DCMAKE_C_COMPILER=clang -G "Ninja"
 ninja
 ```
 
-*Note:* I have not packaged the resources as of now (since they do not belong to me), so you will have to do that yourself. Make a `res/GameAlert.wav` and a `res/song0.wav` in the root directory. Allowing failed
-resource loading and fallback options sounds like a good thing to work on.
+Good job! You are so cool! Now, download this [drive link](https://drive.google.com/drive/folders/1M4K7Ur9gShpLSmHQQxYbpiguzK3a7oSH?usp=sharing). It contains the resource folder. Unzip it and place it in the root directory. So,
+
+```
+root/
+├─ src/
+├─ res/
+│  ├─ *.wav
+│  ├─ *.bmp
+│  ...
+│
+├─ README.md
+...
+```
+Now you should be able to run the binary. (If you don't put the resources, it will segfault because of assert that requires that you have the resources)
 
 ## contributing
 
