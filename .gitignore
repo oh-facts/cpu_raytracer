@@ -7,5 +7,6 @@ build*
 compile_commands.json
 CMakeSettings.json
 res/
+res.zip
 
 vendor/stb*

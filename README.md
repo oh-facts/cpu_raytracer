@@ -10,12 +10,21 @@ I am using it to make a game for the Acerola Game Jam.
 
 ## compile
 
-**SDL2 is required**
+All dependencies are inside vendor/
+They must be downloaded since SDL2 is making my life hard and SDL2_ttf's cmake is making my life harder. Single header libraries are making me hard and I wish every library used a tool to generate a single header library to ship with.
 
-If you are on windows, the cmakelists uses the SDL2 provided inside vendor (registered as a submodule). If you are on linux or mac, it looks for SDL inside your lib directories.
-This also means you don't need to download the submodules if you're not on windows.
+You will have to clone the repo like this -
 
-This will be the case until michaelsoft bindows decides to make a default path for installing libs (30 something major releases, 0 something good ideas)
+```
+git clone --recursive https://github.com/oh-facts/cpu_raytracer.git
+```
+
+If you have already cloned this repo. Then do this -
+
+```
+git pull
+git submodule update --init --recursive
+```
 
 cmake file is very simple. Literally just do `cmake ..` inside a build directory, no extra flags needed.
 ```
