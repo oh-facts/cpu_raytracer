@@ -10,6 +10,7 @@ add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 if(WIN32)
     add_subdirectory(vendor/SDL EXCLUDE_FROM_ALL)
+	add_subdirectory(vendor/SDL_ttf)
 endif()
 if(UNIX)
     find_package(SDL2 REQUIRED)
@@ -20,22 +21,22 @@ include_directories(
     src/platform
     vendor/SDL/include
     vendor/miniaudio
-	vendor/stb
+	vendor/SDL_ttf/include
 )
 
+message(STATUS "SDL2 include directory: ${SDL2_INCLUDE_DIRS}")
 
-set(yk_src  "src/yk_arena.c" "src/yk_game.c" "src/yk_arena.c")
+add_library(${PROJECT_NAME} SHARED "src/yk_game.c") 
 
-add_library(${PROJECT_NAME} SHARED ${yk_src} ${yk_platform}) 
+add_executable(yk_test "src/platform/yk_platform_sdl.c" "src/platform/yk_platform_miniaudio.c")
 
-add_executable(yk_test "src/platform/yk_platform_sdl.c" "vendor/miniaudio/miniaudio.c" "vendor/stb/stb_truetype.c")
 
 if(WIN32)
-    target_link_libraries(yk_test yk2 SDL2main SDL2)
+    target_link_libraries(yk_test SDL2main SDL2 SDL2_ttf)
 endif()
 
 if(UNIX)
-    target_link_libraries(yk_test yk2 SDL2main SDL2 m)
+    target_link_libraries(yk_test SDL2main SDL2 SDL_ttf  m)
 endif()
 
 #----------copy files----------#
@@ -48,17 +49,20 @@ add_custom_target(
         ${CMAKE_BINARY_DIR}/compile_commands.json
         ${CMAKE_CURRENT_LIST_DIR}
 )
+
 if(WIN32)
-    
     add_custom_target(
         copy-dlls ALL
-        ${CMAKE_COMMAND} -E copy_if_different
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${CMAKE_BINARY_DIR}/vendor/SDL/SDL2d.dll
             ${CMAKE_BINARY_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${CMAKE_BINARY_DIR}/vendor/SDL_ttf/SDL2_ttfd.dll
+            ${CMAKE_BINARY_DIR}
+        DEPENDS yk_test
     )
-
-    add_dependencies(copy-dlls yk_test)
 endif()
+
 
 #|----------------|
 

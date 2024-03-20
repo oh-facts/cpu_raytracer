@@ -158,7 +158,7 @@ typedef enum YKMSG YKMSG;
 
 // I think i want to use a #define with strings
 // and map them to enums.
-
+// Future me: What do I mean by that? How would I map #defines to enums
 const char* messages[25] = {
     
     //intro
@@ -212,6 +212,7 @@ struct YkGame
 {
     // stage 0;
     v2i loading_bar;
+    u32 loading_bar_color;
     
     // stage 1
     struct snake snek;
@@ -248,6 +249,8 @@ struct YkGame
     void * _win;
     void (*platform_play_audio)(const char* path);
     void (*platform_set_title)(void * win, const char* title);
+    struct Arena arena;
+    
 };
 
 struct render_buffer
@@ -257,8 +260,7 @@ struct render_buffer
     u32 height;
 };
 
-YK_API void yk_innit_game(struct YkGame *game);
-
-YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta);
+typedef void (*yk_innit_game_func)(struct YkGame *game);
+typedef void (*yk_update_and_render_game_func)(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta);
 
 #endif

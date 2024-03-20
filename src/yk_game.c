@@ -1,5 +1,11 @@
 #include <yk_game.h>
 
+YK_API void yk_innit_game(struct YkGame *game);
+
+YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta);
+
+
+
 internal u32 g_seed = 42;
 internal u32 test_rand();
 internal u32 lcg_rand();
@@ -14,13 +20,13 @@ void load_level(struct YkGame* game);
 internal void send_msg(struct YkGame* game, YKMSG msg);
 
 #define RENDER_STATIC(screen, mode) \
-_render_static_##mode(screen)
+_render_static_##mode(screen,delta)
 
-internal void _render_static_STATIC_MODE_BASIC(struct render_buffer * screen);
-internal void _render_static_STATIC_MODE_HALF(struct render_buffer * screen);
-internal void _render_static_STATIC_MODE_MIXED(struct render_buffer * screen);
-internal void _render_static_STATIC_MODE_MIXED_2(struct render_buffer * screen);
-internal void _render_static_STATIC_MODE_BLACK(struct render_buffer * screen);
+internal void _render_static_STATIC_MODE_BASIC(struct render_buffer * screen, f32 delta);
+internal void _render_static_STATIC_MODE_HALF(struct render_buffer * screen,f32 delta);
+internal void _render_static_STATIC_MODE_MIXED(struct render_buffer * screen, f32 delta);
+internal void _render_static_STATIC_MODE_MIXED_2(struct render_buffer * screen, f32 delta);
+internal void _render_static_STATIC_MODE_BLACK(struct render_buffer * screen,f32 delta);
 
 internal void draw_rect(struct render_buffer *screen, u32 minx, u32 miny, u32 maxx, u32 maxy, u32 rgba);
 
@@ -46,14 +52,17 @@ internal void randomise_apples(struct YkGame* game ,u32 width, u32 height, u32 n
     }
 }
 
-internal const v2i loading_bar = (v2i){4, 50};
+#define LOADING_BAR_X 4
+#define LOADING_BAR_Y 50
+#define LOADING_BAR_POS (v2i){LOADING_BAR_X, LOADING_BAR_Y};
 
 internal void draw_bar(struct render_buffer* screen, struct YkGame *game)
 {
     v2i _lb = game->loading_bar;
-    draw_rect(screen, _lb.x ,_lb.y, _lb.x + 4, _lb.y + 4, 0xFFFFFFFF);
-    draw_rect(screen, _lb.x+5 ,_lb.y, _lb.x + 9, _lb.y + 4, 0xFFFFFFFF);
-    draw_rect(screen, _lb.x+10 ,_lb.y, _lb.x + 14, _lb.y + 4, 0xFFFFFFFF);
+    u32 color = game->loading_bar_color;
+    draw_rect(screen, _lb.x ,_lb.y, _lb.x + 4, _lb.y + 4, color);
+    draw_rect(screen, _lb.x+5 ,_lb.y, _lb.x + 9, _lb.y + 4, color);
+    draw_rect(screen, _lb.x+10 ,_lb.y, _lb.x + 14, _lb.y + 4, color);
     
 }
 
@@ -162,7 +171,7 @@ internal void death_screen(struct YkGame* game)
 
 internal b8 snake_loading_bar_collision(struct snake* snek)
 {
-    if((abs(snek->pos[0].y - loading_bar.y) <= 6) && snek->dir.x == 1)
+    if((abs(snek->pos[0].y - LOADING_BAR_Y) <= 6) && snek->dir.x == 1)
     {
         return 1;
     }
@@ -208,7 +217,7 @@ internal void send_msg(struct YkGame* game, YKMSG msg)
     //printf("w");
 }
 
-YK_API void yk_innit_game(struct YkGame *game)
+void yk_innit_game(struct YkGame *game)
 {
     strcpy(game->bgm,"../res/song0.wav");
     strcpy(game->alert_sound, "../res/GameAlert.wav");
@@ -217,11 +226,10 @@ YK_API void yk_innit_game(struct YkGame *game)
     game->width = 80;
     game->height = 60;
     //game->wave = SNAKE_WAVE_3;
+    game->loading_bar_color = 0xFFFFFFFF;
     
-    //ToDo(facts): remove allocations
-    game->saved = malloc(sizeof(struct YkGame));
+    game->saved = push_struct(&game->arena, game);
     game_data_save(game);
-    
     load_level(game);
 }
 
@@ -234,19 +242,19 @@ void load_level(struct YkGame* game)
         {
             game->msg_index = MSG_INTRO_0;
             game->platform_set_title(game->_win, messages[game->msg_index++]);
-            game->loading_bar = loading_bar;
+            game->loading_bar = LOADING_BAR_POS;
         }break;
         case LEVEL_SNAKE:
         {
             reset_apples(game);
             
             game->num_apples = SNAKE_LEVEL_START_APPLE_NUM;
-            randomise_apples(game,80, loading_bar.y - 5, SNAKE_LEVEL_START_APPLE_NUM );
+            randomise_apples(game,80, LOADING_BAR_Y  - 5, SNAKE_LEVEL_START_APPLE_NUM );
             
             struct snake *snek = &game->snek;
             snek->size = 3;
             snek->dir = (v2i){1, 0};
-            snek->pos[0] = loading_bar;
+            snek->pos[0] = LOADING_BAR_POS;
             
             game->platform_set_title(game->_win, messages[MSG_SNAKE_TRYING_TO_CONN]);
             
@@ -307,7 +315,7 @@ b8 yk_input_is_key_held(struct YkInput *state, u32 key)
     return state->keys[key];
 }
 
-YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta)
+void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta)
 {
     game->timer += delta;
     
@@ -342,6 +350,8 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                 send_msg(game, game->msg_index++);
                 
             }
+            
+            // sim speed
             if (game->timer > 1 / 12.f)
             {
                 game->timer = 0;
@@ -350,7 +360,7 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                 //loading bar
                 if(game->msg_index > MSG_INTRO_3)
                 {
-                    draw_bar(screen,game);                    
+                    draw_bar(screen,game);
                 }
                 
             }
@@ -452,8 +462,8 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                             game->eaten = 0;
                             game->num_apples = SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM ;
                             reset_apples(game);
-                            randomise_apples(game,80,loading_bar.y - 5, SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM);
-                            snek->pos[0] = loading_bar;
+                            randomise_apples(game,80,LOADING_BAR_Y - 5, SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM);
+                            snek->pos[0] = LOADING_BAR_POS;
                             break;
                         }
                         
@@ -498,7 +508,6 @@ YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInp
                     
                     
                 }
-                
                 
                 // draw snake
                 for (u32 i = 0; i < snek->size; i++)
@@ -666,7 +675,11 @@ for (u32 j = 0; j < width; j++) \
 
 
 #define _STATIC_MODE_BASIC \
-pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
+static u32 opa; \
+opa +=delta * 100; \
+opa = opa > 255 ? 0 : opa;\
+/*printl("%d",opa);*/\
+pixel = (0xFF << 24) | ( (100) << 16) | ((36 - opa) << 8) | opa - 12;
 
 #define _STATIC_MODE_MIXED                                                                                 \
 if (j % 2 == 0)                                                                     \
@@ -732,35 +745,35 @@ pixels[width * i + j] = pixel;\
 
 
 
-void _render_static_STATIC_MODE_BASIC(struct render_buffer * screen)
+void _render_static_STATIC_MODE_BASIC(struct render_buffer * screen, f32 delta)
 {
     _RENDER_STATIC_ONE
         _STATIC_MODE_BASIC
         _RENDER_STATIC_END
 }
 
-void _render_static_STATIC_MODE_MIXED(struct render_buffer * screen)
+void _render_static_STATIC_MODE_MIXED(struct render_buffer * screen, f32 delta)
 {
     _RENDER_STATIC_ONE
         _STATIC_MODE_MIXED
         _RENDER_STATIC_END
 }
 
-void _render_static_STATIC_MODE_HALF(struct render_buffer * screen)
+void _render_static_STATIC_MODE_HALF(struct render_buffer * screen, f32 delta)
 {
     _RENDER_STATIC_ONE
         _STATIC_MODE_HALF
         _RENDER_STATIC_END
 }
 
-void _render_static_STATIC_MODE_MIXED_2(struct render_buffer * screen)
+void _render_static_STATIC_MODE_MIXED_2(struct render_buffer * screen, f32 delta)
 {
     _RENDER_STATIC_ONE
         _STATIC_MODE_MIXED_2
         _RENDER_STATIC_END
 }
 
-void _render_static_STATIC_MODE_BLACK(struct render_buffer * screen)
+void _render_static_STATIC_MODE_BLACK(struct render_buffer * screen, f32 delta)
 {
     _RENDER_STATIC_ONE
         _STATIC_MODE_BLACK 
