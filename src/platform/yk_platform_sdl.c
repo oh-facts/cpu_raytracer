@@ -30,9 +30,10 @@
 #define GAME_DLL_CLONED "yk2_test.dylib"
 #endif
 
+char* yk_read_binary_file(const char* filename, struct Arena* arena);
+
 internal char* yk_read_text_file(const char* filepath, struct Arena* arena);
 internal int yk_clone_file(const char* sourcePath, const char* destinationPath);
-char* yk_read_binary_file(const char* filename, struct Arena* arena);
 internal time_t get_file_last_modified_time(const char* pathname);
 
 struct sdl_platform
@@ -41,7 +42,6 @@ struct sdl_platform
     yk_update_and_render_game_func update_and_render_game;
     void * game_dll;
     
-    // unused
     time_t modified_time;
 };
 
@@ -186,16 +186,12 @@ int main(int argc, char *argv[])
     
     
     struct render_buffer render_target = {0};
-    // SDL_GetWindowSize(win, &render_target.height, &render_target.width);
     render_target.height = win_surf->h;
     render_target.width = win_surf->w;
     render_target.pixels = win_surf->pixels;
     
     platform.innit_game(&game, &render_target);
     
-    
-    
-    //struct bitmap bmp = read_bitmap_file("../res/test.bmp",&game.arena);
     
 #if 0
     //Dangerous! Only call if its a small image. You won't be able to ctrl + c out of this if its millions of pixels
@@ -214,9 +210,6 @@ int main(int argc, char *argv[])
     SDL_DisplayMode dm;
     
     u8 isF = 0;
-    
-    i32 width, height;
-    SDL_GetWindowSize(win, &width, &height);
     
     while (!quit)
     {
@@ -293,7 +286,6 @@ int main(int argc, char *argv[])
                                     isF = 0;
                                     SDL_SetWindowFullscreen(win, 0);
                                     SDL_SetWindowSize(win,960,540);
-                                    SDL_GetWindowSize(win, &width, &height);
                                     SDL_SetWindowPosition(win, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
                                     
                                 }
@@ -336,8 +328,11 @@ int main(int argc, char *argv[])
                         case SDL_WINDOWEVENT_RESIZED:
                         {
                             win_surf = SDL_GetWindowSurface(win);
+                            
                             SDL_CHECK(win_surf);
                             SDL_GetDesktopDisplayMode(0, &dm);
+                            
+                            i32 width, height;
                             SDL_GetWindowSize(win, &width, &height);
                             
                             if(width < 800)
@@ -345,6 +340,11 @@ int main(int argc, char *argv[])
                                 width = 800;
                                 SDL_SetWindowSize(win, width, height);
                             }
+                            
+                            render_target.pixels = win_surf->pixels;
+                            render_target.width = win_surf->w;
+                            render_target.height = win_surf->h;
+                            
                             
                         }break;
                     }
@@ -354,30 +354,15 @@ int main(int argc, char *argv[])
             }
         }
         
-        // ToDo(facts): store pitch inside render_buffer
-        
         // game loop start--------
         local_persist f32 fixed_dt;
         fixed_dt += dt;
         
         if (fixed_dt > 1 / 60.f)
         {
-            //render_target.pixels[0] = 0xFFFF0000;
-            
             fixed_dt = 0;
             
-            {
-                
-                //Note(facts): Not too happy with this. Move it to one of the events
-                
-                win_surf = SDL_GetWindowSurface(win);
-                render_target.pixels = win_surf->pixels;
-                render_target.width = win_surf->w;
-                render_target.height = win_surf->h;
-                platform.update_and_render_game(&render_target, &input, &game, GAME_UPDATE_RATE);
-                
-                
-            }
+            platform.update_and_render_game(&render_target, &input, &game, GAME_UPDATE_RATE);
             
             SDL_UpdateWindowSurface(win);
             

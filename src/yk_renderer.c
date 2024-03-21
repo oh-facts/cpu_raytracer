@@ -1,4 +1,5 @@
 #include <yk_renderer.h>
+
 /*
     :vomit:
     my alpha blending was a sin so even though I require an alpha channel. I am not going to use it
@@ -32,21 +33,48 @@ void draw_rect(struct render_buffer *screen, i32 minx, i32 miny, i32 maxx, i32 m
 
 void blit_bitmap_scaled(struct render_buffer* dst, struct render_buffer* src, struct render_rect* dst_rect)
 {
-    //ToDo(facts): Do proper clipping tests lol
-    f32 scale_factor = 0.5f;
-    for(u32 y = 0; y < src->height; y++) {
-        for(u32 x = 0; x < src->width; x++) {
+    f32 scaleX = (f32)dst_rect->w / (f32)src->width;
+    f32 scaleY = (f32)dst_rect->h / (f32)src->height;
+    
+    for(u32 y = 0; y < src->height; y++)
+    {
+        for(u32 x = 0; x < src->width; x++)
+        {
             u32 pixel = src->pixels[y * src->width + x];
             
+            u32 destX = dst_rect->x + (u32)(x * scaleX);
+            u32 destY = dst_rect->y + (u32)(y * scaleY);
+            
             draw_rect(dst,
-                      x * scale_factor,
-                      y * scale_factor,
-                      (x + 1) * scale_factor,
-                      (y + 1) * scale_factor,
+                      destX,
+                      destY,
+                      destX + (u32)scaleX,
+                      destY + (u32)scaleY,
                       pixel);
         }
     }
 }
+
+
+//https://en.wikipedia.org/wiki/BMP_file_format
+#pragma pack(push, 1)
+struct BitmapHeader
+{
+    //file header
+    u16 file_type;
+    u32 file_size;
+    u16 _reserved;
+    u16 _reserved2;
+    u32 pixel_offset;
+    
+    //DIB header
+    u32 header_size;
+    i32 width;
+    i32 height;
+    u16 color_panes;
+    u16 depth;// stored in bits
+};
+#pragma pack(pop)
 
 struct bitmap read_bitmap_file(char* file_data, struct Arena* arena)
 {
@@ -78,4 +106,3 @@ struct bitmap read_bitmap_file(char* file_data, struct Arena* arena)
     
     return result;
 }
-

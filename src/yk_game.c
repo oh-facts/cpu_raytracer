@@ -600,6 +600,9 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
     u32 win_w = 16;
     u32 win_h = 9;
     
+    //flush screen
+    draw_rect(screen,0,0,screen->width, screen->height,BLACK);
+    
     //tv render
     struct render_rect ren_rect= {0};
     
@@ -610,9 +613,9 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
     
     blit_bitmap_scaled(screen, &game->main, &ren_rect);
     
-    blit_bitmap_scaled(screen,(struct render_buffer*) &game->rabbit,&ren_rect);
+    //blit_bitmap_scaled(screen,(struct render_buffer*) &game->rabbit,&ren_rect);
     
-    blit_bitmap_scaled(screen,(struct render_buffer*) &game->welcome,&ren_rect);
+    //blit_bitmap_scaled(screen,(struct render_buffer*) &game->welcome,&ren_rect);
     
     //blit_bitmap_scaled(screen,(struct render_buffer*) &game->welcome,&ren_rect);
     
