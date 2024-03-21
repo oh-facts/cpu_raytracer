@@ -7,9 +7,11 @@
 //https://github.com/libsdl-org/SDL/issues/9221
 
 #ifdef _WIN32
+#define SDL_MAIN_HANDLED
 #include <SDL.h>
 #include <SDL_ttf.h>
 #else
+#define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #endif

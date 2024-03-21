@@ -2,9 +2,11 @@
 
 High level
 ----
-~ 2 - 3 hrs of gameplay for someone who has not played before. I don't want to spend too much time on this. I will calculate this by watching other people play. I will sell this based on how much time I invested. I value my skills at 100$/hr (severely understating so I am affordable). I expect to sell 1,000,000 copies. So, I will spend 1000 hrs at most in this. So I will need to sell this at 10$ to break even. And 10.01$ to make a profit. The math is correct for my constants and I pulled the constants out of my ass.
+Game is about someone who is trying to make his stupid tv work. It is brand new and brand stupid. It is also not sentient so you can't hurt their feelings.
 
+2 - 3 hrs for someone who has not played before. Maybe more maybe less. Puzzles mostly.
 
+1. stage 1 - snake stage.
 ----
 
 3. The puzzle in question is one where the tv asks to have all his pixels returned and promises to  give you a special pixel so you don't have to constantly move. Now, in the third stage of the snake phase, you grow smaller. But its not enough to completely die. So you need to eat yourself and then die. The number of pixels that spawn in this stage will be always be less than your size and I hope the player discovers that eating himself makes him smaller.
@@ -19,8 +21,6 @@ I think a much better soln is used to have all the dialogue print beforehand. Th
 
 Perhaps we can do something like this. Dead pixels are just black squares that get rendererd randomly (fixed positions). Also now i do the candy colored background "static" since the noise is very distracting
 
-
-8.work on doing audio properly. this is neccessary to pause audio.
 12. loading bar should be identical to snake.
 
 14. Don't call them waves. Call them stages.
@@ -52,6 +52,7 @@ Things I added
 
 // 3/20
 17. screen resizing. All resolutions, pixel perfect, fullscreen support
+8.work on doing audio properly. this is neccessary to pause audio.
 
 --!>
 

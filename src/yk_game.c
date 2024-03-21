@@ -29,7 +29,8 @@ internal void _render_static_STATIC_MODE_MIXED(struct render_buffer * screen, f3
 internal void _render_static_STATIC_MODE_MIXED_2(struct render_buffer * screen, f32 delta);
 internal void _render_static_STATIC_MODE_BLACK(struct render_buffer * screen,f32 delta);
 */
-internal void draw_rect(struct render_buffer *screen, u32 minx, u32 miny, u32 maxx, u32 maxy, u32 rgba);
+internal void draw_rect(struct render_buffer *screen, i32 minx, i32 miny, i32 maxx, i32 maxy, u32 rgba);
+internal void draw_rect_pos_scale(struct render_buffer *screen, v2i pos, v2i scale,u32 rgba);
 
 #define V2I_FMT "%d %d"
 #define V2I_(s) (s).x, (s.y)
@@ -71,7 +72,7 @@ internal void draw_apples(struct YkGame* game, struct render_buffer * screen, u3
 {
     for(u32 i = 0; i < num_apples; i ++)
     {
-        draw_rect(screen, game->apples[i].x, game->apples[i].y, game->apples[i].x + 2, game->apples[i].y + 2, color);
+        draw_rect_pos_scale(screen,game->apples[i], (v2i){2,2},color);
     }
 }
 
@@ -144,8 +145,9 @@ internal void game_data_clone(struct YkGame* dst, struct YkGame* src)
     
     dst->timer       = src->timer;
     
-    strcpy(dst->bgm,src->bgm);
-    strcpy(dst->alert_sound,src->alert_sound);
+    dst->bgm = src->bgm;
+    dst->alert_sound = src->alert_sound;
+    
     dst->width       = src->width;
     dst->height      = src->height;
     
@@ -158,8 +160,11 @@ internal void game_data_clone(struct YkGame* dst, struct YkGame* src)
     // why am I doing this? This is platform. game doesn't
     //care about this
     dst->_win        = src->_win;
+    dst->platform_innit_audio = src->platform_innit_audio;
     dst->platform_play_audio = src->platform_play_audio;
+    dst->platform_stop_audio = src->platform_stop_audio;
     dst->platform_set_title = src->platform_set_title;
+    
 }
 
 internal void game_data_save(struct YkGame* game)
@@ -179,7 +184,6 @@ internal void death_screen(struct YkGame* game)
 {
     printl(":( DEAD DEAD");
     
-    //ToDo(facts): doesn't work
     game_data_restore(game);
 }
 
@@ -233,8 +237,9 @@ internal void send_msg(struct YkGame* game, YKMSG msg)
 
 void yk_innit_game(struct YkGame *game)
 {
-    strcpy(game->bgm,"../res/song0.wav");
-    strcpy(game->alert_sound, "../res/GameAlert.wav");
+    game->bgm = game->platform_innit_audio("../res/song0.wav");
+    game->alert_sound = game->platform_innit_audio("../res/GameAlert.wav");
+    
     
     game->level = 0;
     game->width = 80;
@@ -298,8 +303,13 @@ typedef enum STATIC_MODE STATIC_MODE;
     :vomit:
     my alpha blending was a sin so even though I require an alpha channel. I am not going to use it
 */
-void draw_rect(struct render_buffer *screen, u32 minx, u32 miny, u32 maxx, u32 maxy, u32 rgba)
+void draw_rect(struct render_buffer *screen, i32 minx, i32 miny, i32 maxx, i32 maxy, u32 rgba)
 {
+    if(maxx < 0 || maxy < 0  || minx > screen->width || miny > screen->height)
+    {
+        return;
+    }
+    
     minx = (minx < 0) ? 0 : minx;
     miny = (miny < 0) ? 0 : miny;
     maxx = (maxx > screen->width) ? screen->width : maxx;
@@ -318,6 +328,11 @@ void draw_rect(struct render_buffer *screen, u32 minx, u32 miny, u32 maxx, u32 m
         }
         row += screen->width * 4;
     }
+}
+
+void draw_rect_pos_scale(struct render_buffer *screen, v2i pos, v2i scale,u32 rgba)
+{
+    draw_rect(screen, pos.x - scale.x, pos.y - scale.y, pos.x + scale.x, pos.y + scale.y, rgba);
 }
 
 b8 yk_input_is_key_tapped(struct YkInput *state, u32 key)
@@ -417,6 +432,11 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
                         //draw my life
                         snake_eat_self(snek);
                         RENDER_STATIC(screen, game, STATIC_MODE_BASIC);
+                        
+                        // black pixel
+                        draw_rect_pos_scale(screen, (v2i){3,10}, (v2i){4,4}, BLACK);
+                        
+                        
                         draw_apples(game,screen, WHITE,SNAKE_LEVEL_START_APPLE_NUM);
                         snake_mv(game,input);
                         // check and eat apple. using broadphase SAT AABB. Might optmize with quadtrees
@@ -464,6 +484,7 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
                     {
                         RENDER_STATIC(screen,game, STATIC_MODE_BASIC);
                         game->align_wait_timer += delta * 4;
+                        
                         
                         game->loading_bar.x = game->loading_bar.x < screen->width ? game->loading_bar.x + SNAKE_SPEED : 0;
                         draw_bar(screen,game);

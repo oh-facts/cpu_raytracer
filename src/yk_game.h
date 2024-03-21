@@ -243,9 +243,9 @@ struct YkGame
     // Rework it. Or call it an apropriate name.
     f32 timer;
     
-    // do audio properly. filepath arrays are disgusting.
-    char bgm[32];
-    char alert_sound[32];
+    u32 bgm;
+    u32 alert_sound;
+    
     i32 width;
     i32 height;
     
@@ -256,7 +256,9 @@ struct YkGame
     
     //platform
     void * _win;
-    void (*platform_play_audio)(const char* path);
+    u32 (*platform_innit_audio)(const char* path);
+    void (*platform_play_audio)(u32 audio_id);
+    void (*platform_stop_audio)(u32 audio_id);
     void (*platform_set_title)(void * win, const char* title);
     
 };
@@ -264,8 +266,8 @@ struct YkGame
 struct render_buffer
 {
     u32 *pixels;
-    u32 width;
-    u32 height;
+    i32 width;
+    i32 height;
 };
 
 typedef void (*yk_innit_game_func)(struct YkGame *game);

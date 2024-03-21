@@ -150,14 +150,33 @@ internal struct bitmap read_bitmap_file(const char* filepath, struct Arena* aren
 
 #define GAME_UPDATE_RATE (1/60.f)
 
+// ToDo(facts): Do audio properly loser
+
 ma_result result;
 ma_engine engine;
 
+ma_sound sounds[10];
+u32 num_sounds;
 
-// ToDO(facts): Do properly loser
-void sdl_play_audio(const char* path)
+u32 miniaudio_innit_audio(const char* path)
 {
-    ma_engine_play_sound(&engine, path, 0);
+    result = ma_sound_init_from_file(&engine, path, 0, NULL, NULL, &sounds[num_sounds]);
+    if (result != MA_SUCCESS)
+    {
+        printf("Audio %s not found",path);
+    }
+    return num_sounds++;
+}
+
+void miniaudio_play_audio(u32 id)
+{
+    ma_sound_start(&sounds[id]);
+}
+
+void miniaudio_stop_audio(u32 id)
+{
+    ma_sound_stop(&sounds[id]);
+    ma_sound_seek_to_pcm_frame(&sounds[id], 0);
 }
 
 void sdl_set_title(void* win, const char* title)
@@ -228,7 +247,9 @@ int main(int argc, char *argv[])
     arena_innit(&game.arena,mem_size,malloc(mem_size));
     //platform
     game._win = win;
-    game.platform_play_audio = sdl_play_audio;
+    game.platform_innit_audio = miniaudio_innit_audio;
+    game.platform_play_audio = miniaudio_play_audio;
+    game.platform_stop_audio = miniaudio_stop_audio;
     game.platform_set_title = sdl_set_title;
     
     platform.innit_game(&game);
