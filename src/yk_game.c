@@ -244,9 +244,9 @@ void yk_innit_game(struct YkGame *game, struct render_buffer* buffer)
     load_level(game);
     
     
-    game->main.width = 80;
-    game->main.height = 60;
-    game->main.pixels = push_array(&game->arena, sizeof(u32), 80 * 60);
+    game->main.width = game->width;
+    game->main.height = game->height;
+    game->main.pixels = push_array(&game->arena, sizeof(u32), game->width * game->height);
     
     {
         char* file_data = game->platform_read_file("../res/test.bmp",&game->scratch);
@@ -707,7 +707,8 @@ internal void snake_mv(struct YkGame * game, struct YkInput *input)
 }
 
 
-void draw_candy_bg(struct YkGame* game, f32 delta)
+void 
+draw_candy_bg(struct YkGame* game, f32 delta)
 {
     u32 width = game->main.width;
     u32 height = game->main.height;
