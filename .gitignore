@@ -8,5 +8,5 @@ compile_commands.json
 CMakeSettings.json
 res/
 *.zip
-releases/
+builds/
 vendor/stb*
