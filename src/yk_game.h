@@ -270,13 +270,7 @@ struct render_buffer
     i32 height;
 };
 
-struct game_render_buffer
-{
-    struct render_buffer main;
-    struct render_buffer ui;
-};
-
 typedef void (*yk_innit_game_func)(struct YkGame *game);
-typedef void (*yk_update_and_render_game_func)(struct game_render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta);
+typedef void (*yk_update_and_render_game_func)(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta);
 
 #endif
