@@ -279,6 +279,12 @@ void load_level(struct YkGame* game)
             game->platform_set_title(game->_win, messages[MSG_SNAKE_TRYING_TO_CONN]);
             
         }break;
+        case LEVEL_OUTRO:
+        {
+            printf("e");
+            game->msg_index = MSG_OUTRO_1;
+            send_msg(game,game->msg_index++);
+        }break;
         
         default:
         {
@@ -531,6 +537,7 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
                         {
                             snek->size = 1;
                             game->level ++;
+                            load_level(game);
                         }
                         
                     }break;
