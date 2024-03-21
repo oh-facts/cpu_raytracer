@@ -1,6 +1,7 @@
 #include <yk_game.h>
+#include <yk_renderer.h>
 
-YK_API void yk_innit_game(struct YkGame *game);
+YK_API void yk_innit_game(struct YkGame *game, struct render_buffer *screen);
 
 YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta);
 
@@ -19,17 +20,9 @@ internal u32 lcg_rand();
 void load_level(struct YkGame* game);
 internal void send_msg(struct YkGame* game, YKMSG msg);
 
-#define RENDER_STATIC(screen, game,mode) \
-_render_static_##mode(screen, game,delta)
+void draw_candy_bg(struct YkGame* game, f32 delta);
 
-internal void _render_static_STATIC_MODE_BASIC(struct render_buffer * screen, struct YkGame* game, f32 delta);
-/*
-internal void _render_static_STATIC_MODE_HALF(struct render_buffer * screen,f32 delta);
-internal void _render_static_STATIC_MODE_MIXED(struct render_buffer * screen, f32 delta);
-internal void _render_static_STATIC_MODE_MIXED_2(struct render_buffer * screen, f32 delta);
-internal void _render_static_STATIC_MODE_BLACK(struct render_buffer * screen,f32 delta);
-*/
-internal void draw_rect(struct render_buffer *screen, i32 minx, i32 miny, i32 maxx, i32 maxy, u32 rgba);
+
 internal void draw_rect_pos_scale(struct render_buffer *screen, v2i pos, v2i scale,u32 rgba);
 
 #define V2I_FMT "%d %d"
@@ -235,8 +228,9 @@ internal void send_msg(struct YkGame* game, YKMSG msg)
     //printf("w");
 }
 
-void yk_innit_game(struct YkGame *game)
+void yk_innit_game(struct YkGame *game, struct render_buffer* buffer)
 {
+    
     game->bgm = game->platform_innit_audio("../res/song0.wav");
     game->alert_sound = game->platform_innit_audio("../res/GameAlert.wav");
     
@@ -249,8 +243,30 @@ void yk_innit_game(struct YkGame *game)
     
     load_level(game);
     
+    
+    game->main.width = 80;
+    game->main.height = 60;
+    game->main.pixels = push_array(&game->arena, sizeof(u32), 80 * 60);
+    
+    {
+        char* file_data = game->platform_read_file("../res/test.bmp",&game->scratch);
+        game->rabbit = read_bitmap_file(file_data,&game->arena);
+        
+        game->scratch.used = 0;
+    }
+    
+    {
+        char* file_data = game->platform_read_file("../res/font.bmp",&game->scratch);
+        game->welcome = read_bitmap_file(file_data,&game->arena);
+        
+        game->scratch.used = 0;
+        
+    }
+    
     game->saved = push_struct(&game->arena, game);
     game_data_save(game);
+    
+    
 }
 
 void load_level(struct YkGame* game)
@@ -305,36 +321,6 @@ enum STATIC_MODE
 
 typedef enum STATIC_MODE STATIC_MODE;
 
-/*
-    :vomit:
-    my alpha blending was a sin so even though I require an alpha channel. I am not going to use it
-*/
-void draw_rect(struct render_buffer *screen, i32 minx, i32 miny, i32 maxx, i32 maxy, u32 rgba)
-{
-    if(maxx < 0 || maxy < 0  || minx > screen->width || miny > screen->height)
-    {
-        return;
-    }
-    
-    minx = (minx < 0) ? 0 : minx;
-    miny = (miny < 0) ? 0 : miny;
-    maxx = (maxx > screen->width) ? screen->width : maxx;
-    maxy = (maxy > screen->height) ? screen->height : maxy;
-    
-    // ToDo(facts): store pitch inside render_buffer
-    u8 *row = (u8 *)screen->pixels + miny * (screen->width * 4) + minx * 4;
-    
-    for (u32 y = miny; y < maxy; y++)
-    {
-        u32 *pixel = (u32 *)row;
-        
-        for (u32 x = minx; x < maxx; x++)
-        {
-            *pixel++ = rgba;
-        }
-        row += screen->width * 4;
-    }
-}
 
 void draw_rect_pos_scale(struct render_buffer *screen, v2i pos, v2i scale,u32 rgba)
 {
@@ -353,6 +339,7 @@ b8 yk_input_is_key_held(struct YkInput *state, u32 key)
 
 void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta)
 {
+    
     game->timer += delta;
     
     if (yk_input_is_key_tapped(input, YK_ACTION_SAVE))
@@ -368,7 +355,7 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
     {
         case LEVEL_INTRO:
         {
-            game->loading_bar.x = game->loading_bar.x < screen->width ? game->loading_bar.x + 1 : 0;
+            game->loading_bar.x = game->loading_bar.x < game->main.width ? game->loading_bar.x + 1 : 0;
             if(yk_input_is_key_tapped(input,YK_ACTION_ACCEPT))
             {
                 if(game->msg_index == MSG_INTRO_5)
@@ -391,12 +378,12 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
             if (game->timer > 1 / 12.f)
             {
                 game->timer = 0;
-                RENDER_STATIC(screen, game,STATIC_MODE_BASIC);
+                draw_candy_bg(game, delta);
                 
                 //loading bar
                 if(game->msg_index > MSG_INTRO_3)
                 {
-                    draw_bar(screen,game);
+                    draw_bar(&game->main,game);
                 }
                 
             }
@@ -437,13 +424,13 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
                     {
                         //draw my life
                         snake_eat_self(snek);
-                        RENDER_STATIC(screen, game, STATIC_MODE_BASIC);
+                        draw_candy_bg(game, delta);
                         
                         // black pixel
-                        draw_rect_pos_scale(screen, (v2i){3,10}, (v2i){4,4}, BLACK);
+                        draw_rect_pos_scale(&game->main, (v2i){3,10}, (v2i){4,4}, BLACK);
                         
                         
-                        draw_apples(game,screen, WHITE,SNAKE_LEVEL_START_APPLE_NUM);
+                        draw_apples(game,&game->main, WHITE,SNAKE_LEVEL_START_APPLE_NUM);
                         snake_mv(game,input);
                         // check and eat apple. using broadphase SAT AABB. Might optmize with quadtrees
                         snake_apple_collision(game, SNAKE_LEVEL_START_APPLE_NUM ,1);
@@ -488,12 +475,12 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
                     }break;
                     case SNAKE_WAVE_ALIGN_WAIT:
                     {
-                        RENDER_STATIC(screen,game, STATIC_MODE_BASIC);
+                        draw_candy_bg(game, delta);
                         game->align_wait_timer += delta * 4;
                         
                         
-                        game->loading_bar.x = game->loading_bar.x < screen->width ? game->loading_bar.x + SNAKE_SPEED : 0;
-                        draw_bar(screen,game);
+                        game->loading_bar.x = game->loading_bar.x < game->main.width ? game->loading_bar.x + SNAKE_SPEED : 0;
+                        draw_bar(&game->main,game);
                         
                         if(game->align_wait_timer > 3 && !game->align_wait_flag)
                         {
@@ -514,8 +501,8 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
                     }break;
                     case SNAKE_WAVE_DEAD_PIXELS:
                     {
-                        RENDER_STATIC(screen, game,STATIC_MODE_BASIC);
-                        draw_apples(game,screen, WHITE,SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM);
+                        draw_candy_bg(game, delta);
+                        draw_apples(game,&game->main, WHITE,SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM);
                         snake_apple_collision(game,SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM,0);
                         snake_mv(game,input);
                         snake_eat_self(snek);
@@ -554,7 +541,7 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
                 // draw snake
                 for (u32 i = 0; i < snek->size; i++)
                 {
-                    draw_rect(screen, snek->pos[i].x, snek->pos[i].y, snek->pos[i].x + 4, snek->pos[i].y + 4, WHITE);
+                    draw_rect(&game->main, snek->pos[i].x, snek->pos[i].y, snek->pos[i].x + 4, snek->pos[i].y + 4, WHITE);
                 }
                 
                 
@@ -573,9 +560,9 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
             timer += delta;
             if(timer > 1/12.f)
             {
-                RENDER_STATIC(screen, game, STATIC_MODE_BASIC);
-                game->loading_bar.x = game->loading_bar.x < screen->width ? game->loading_bar.x + SNAKE_SPEED : 0;
-                draw_bar(screen,game);
+                draw_candy_bg(game,delta);
+                game->loading_bar.x = game->loading_bar.x < game->main.width ? game->loading_bar.x + SNAKE_SPEED : 0;
+                draw_bar(&game->main,game);
                 
                 
                 timer = 0;
@@ -603,6 +590,31 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
         }break;
     }
     
+    //memcpy(screen->pixels,)
+    
+    
+    u32 tv_w = 8;
+    u32 tv_h = 6;
+    u32 pad_w = 4; // 4 on each side
+    u32 pad_h = 3;
+    u32 win_w = 16;
+    u32 win_h = 9;
+    
+    //tv render
+    struct render_rect ren_rect= {0};
+    
+    ren_rect.h = screen->height - (screen->height /pad_h*1.f) * (0.6f);
+    ren_rect.w = ren_rect.h * (tv_w*1.f/tv_h) ;
+    ren_rect.x = (screen->width - ren_rect.w)/2;
+    ren_rect.y = 0;
+    
+    blit_bitmap_scaled(screen, &game->main, &ren_rect);
+    
+    blit_bitmap_scaled(screen,(struct render_buffer*) &game->rabbit,&ren_rect);
+    
+    blit_bitmap_scaled(screen,(struct render_buffer*) &game->welcome,&ren_rect);
+    
+    //blit_bitmap_scaled(screen,(struct render_buffer*) &game->welcome,&ren_rect);
     
     
     // stupid debug
@@ -692,152 +704,57 @@ internal void snake_mv(struct YkGame * game, struct YkInput *input)
 }
 
 
-// For you own sake. Don't look at the code after this line.
-// It is metaprogramming sin.
-// Don't say I didn't say I didn't say I didn't warn ya
-// In a manner of speaking this is max re-usability.
-// We will not speak of this manner.
-// I will whip out a metaprogrammer to split code based on
-// macros. I didn't want an if else inside such hot code for a situation
-// where the if elsing was constant for the function.
-// In fact, after this game jam. After acerola awards me for my ground breaking
-// code and gameplay, I will make something to break code.
-// I did this mostly for fun. It took 20 minutes at best.
-// I don't even know why I am explaining this. Who even reads this stuff
-
-#define _RENDER_STATIC_ONE    \
-u32 width = screen->width; \
-u32 height = screen->height; \
-u32 *pixels = screen->pixels;   \
-for (u32 i = 0; i < height; i++)    \
-{                                   \
-u32 pixel;                      \
-for (u32 j = 0; j < width; j++) \
-{                               
-
-
-#define _STATIC_MODE_BASIC \
-game->opa +=delta * 100; \
-game->opa = game->opa > 255 ? 0 : game->opa;\
-/*printl("%d",opa);*/\
-pixel = (0xFF << 24) | ( (100) << 16) | ((36 - game->opa) << 8) | game->opa - 12;
-
-#define _STATIC_MODE_MIXED                                                                                 \
-if (j % 2 == 0)                                                                     \
-{ \
-u32 randy = test_rand() * 1.5;              \
-pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;  \
-}   \
-else    \
-{   \
-pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand(); \
-}
-
-#define _STATIC_MODE_MIXED_2                                                                                 \
-if (!(j % 5 == 0))                                                                     \
-{ \
-u32 randy = test_rand() * 1.5;              \
-pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;  \
-}   \
-else    \
-{   \
-pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand(); \
-}       
-
-#define _STATIC_MODE_HALF \
-if (j > width / 2)\
-{\
-u32 randy = test_rand() * 1.5;\
-pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;\
-}\
-else\
-{\
-pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();\
-}
-
-#define _STATIC_MODE_BLACK                                                       \
-u32 randy = test_rand() * 1.5;                                   \
-pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;   
-
-
-#define _RENDER_STATIC_END        \
-{\
-u32 overlay = 0x44000000;\
-\
-u8 src_r = (pixel >> 16) & 0xFF;\
-u8 src_g = (pixel >> 8) & 0xFF;\
-u8 src_b = pixel & 0xFF;\
-\
-u8 dst_r = (overlay >> 16) & 0xFF;\
-u8 dst_g = (overlay >> 8) & 0xFF;\
-u8 dst_b = overlay & 0xFF;\
-u8 dst_a = (overlay >> 24) & 0xFF;\
-\
-u8 new_r = (src_r * (255 - dst_a) + dst_r * dst_a) / 255;\
-u8 new_g = (src_g * (255 - dst_a) + dst_g * dst_a) / 255;\
-u8 new_b = (src_b * (255 - dst_a) + dst_b * dst_a) / 255;\
-\
-pixel = (0xFF << 24) | (new_r << 16) | (new_g << 8) | new_b;\
-\
-pixels[width * i + j] = pixel;\
-}\
-}\
-}
-
-
-
-void _render_static_STATIC_MODE_BASIC(struct render_buffer * screen, struct YkGame* game, f32 delta)
+void draw_candy_bg(struct YkGame* game, f32 delta)
 {
-    _RENDER_STATIC_ONE
-        _STATIC_MODE_BASIC
-        _RENDER_STATIC_END
-}
-/*
-void _render_static_STATIC_MODE_MIXED(struct render_buffer * screen, f32 delta)
-{
-    _RENDER_STATIC_ONE
-        _STATIC_MODE_MIXED
-        _RENDER_STATIC_END
+    u32 width = game->main.width;
+    u32 height = game->main.height;
+    u32 *pixels = game->main.pixels;
+    for (u32 i = 0; i < height; i++)
+    {                                  
+        u32 pixel;                     
+        for (u32 j = 0; j < width; j++)
+        {
+            game->opa +=delta * 100;
+            game->opa = game->opa > 255 ? 0 : game->opa;
+            /*printl("%d",opa);*/
+            pixel = (0xFF << 24) | ( (100) << 16) | ((36 - game->opa) << 8) | game->opa - 12;
+            
+            u32 overlay = 0x44000000;
+            
+            u8 src_r = (pixel >> 16) & 0xFF;
+            u8 src_g = (pixel >> 8) & 0xFF;
+            u8 src_b = pixel & 0xFF;
+            
+            u8 dst_r = (overlay >> 16) & 0xFF;
+            u8 dst_g = (overlay >> 8) & 0xFF;
+            u8 dst_b = overlay & 0xFF;
+            u8 dst_a = (overlay >> 24) & 0xFF;
+            
+            u8 new_r = (src_r * (255 - dst_a) + dst_r * dst_a) / 255;
+            u8 new_g = (src_g * (255 - dst_a) + dst_g * dst_a) / 255;
+            u8 new_b = (src_b * (255 - dst_a) + dst_b * dst_a) / 255;
+            
+            pixel = (0xFF << 24) | (new_r << 16) | (new_g << 8) | new_b;
+            
+            pixels[width * i + j] = pixel;
+        }
+    }
 }
 
-void _render_static_STATIC_MODE_HALF(struct render_buffer * screen, f32 delta)
-{
-    _RENDER_STATIC_ONE
-        _STATIC_MODE_HALF
-        _RENDER_STATIC_END
-}
 
-void _render_static_STATIC_MODE_MIXED_2(struct render_buffer * screen, f32 delta)
-{
-    _RENDER_STATIC_ONE
-        _STATIC_MODE_MIXED_2
-        _RENDER_STATIC_END
-}
-
-void _render_static_STATIC_MODE_BLACK(struct render_buffer * screen, f32 delta)
-{
-    _RENDER_STATIC_ONE
-        _STATIC_MODE_BLACK 
-        _RENDER_STATIC_END
-}
-*/
-// metaprogramming sin ends here.
-
-
-/*
 void render_static(struct render_buffer * screen, STATIC_MODE mode)
 {
-
+    
     u32 width = screen->width;
     u32 height = screen->height;
     u32 *pixels = screen->pixels;
-
+    
     for (u32 i = 0; i < height; i++)
     {
         u32 pixel;
         for (u32 j = 0; j < width; j++)
         {
-    #if 0
+#if 0
             if (j % 2 == 0)
             {
                 u32 randy = test_rand() * 1.5;
@@ -847,7 +764,7 @@ void render_static(struct render_buffer * screen, STATIC_MODE mode)
             {
                 pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
             }
-    #elif 1
+#elif 1
             if (j > width / 2)
             {
                 u32 randy = test_rand() * 1.5;
@@ -857,39 +774,39 @@ void render_static(struct render_buffer * screen, STATIC_MODE mode)
             {
                 pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
             }
-
-    #elif 0
+            
+#elif 0
             pixel = (0xFF << 24) | ((test_rand()) << 16) | (test_rand() << 8) | test_rand();
-
-    #elif 0
+            
+#elif 0
             u32 randy = test_rand() * 1.5;
             pixel = (0xFF << 24) | ((randy) << 16) | (randy << 8) | randy;
-
-    #endif
-
+            
+#endif
+            
             // overlay thing
             // terrible terrible brute forced
             {
                 u32 overlay = 0x44000000;
-
+                
                 u8 src_r = (pixel >> 16) & 0xFF;
                 u8 src_g = (pixel >> 8) & 0xFF;
                 u8 src_b = pixel & 0xFF;
-
+                
                 u8 dst_r = (overlay >> 16) & 0xFF;
                 u8 dst_g = (overlay >> 8) & 0xFF;
                 u8 dst_b = overlay & 0xFF;
                 u8 dst_a = (overlay >> 24) & 0xFF;
-
+                
                 u8 new_r = (src_r * (255 - dst_a) + dst_r * dst_a) / 255;
                 u8 new_g = (src_g * (255 - dst_a) + dst_g * dst_a) / 255;
                 u8 new_b = (src_b * (255 - dst_a) + dst_b * dst_a) / 255;
-
+                
                 pixel = (0xFF << 24) | (new_r << 16) | (new_g << 8) | new_b;
-
+                
                 pixels[width * i + j] = pixel;
             }
         }
     }
 }
-*/
+

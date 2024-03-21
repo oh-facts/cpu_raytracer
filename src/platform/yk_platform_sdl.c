@@ -32,7 +32,7 @@
 
 internal char* yk_read_text_file(const char* filepath, struct Arena* arena);
 internal int yk_clone_file(const char* sourcePath, const char* destinationPath);
-internal char* yk_read_binary_file(const char* filename, struct Arena* arena);
+char* yk_read_binary_file(const char* filename, struct Arena* arena);
 internal time_t get_file_last_modified_time(const char* pathname);
 
 struct sdl_platform
@@ -81,72 +81,6 @@ internal time_t get_file_last_modified_time(const char* pathname)
     
     return stat_buf.st_mtime;
 }
-
-//https://en.wikipedia.org/wiki/BMP_file_format
-#pragma pack(push, 1)
-struct BitmapHeader
-{
-    //file header
-    u16 file_type;
-    u32 file_size;
-    u16 _reserved;
-    u16 _reserved2;
-    u32 pixel_offset;
-    
-    //DIB header
-    u32 header_size;
-    i32 width;
-    i32 height;
-    u16 color_panes;
-    u16 depth;// stored in bits
-};
-#pragma pack(pop)
-
-
-struct bitmap
-{
-    u32* pixels;
-    u32 width;
-    u32 height;
-};
-
-// Note(facts): This is stored upside down. So I flip it (along x axis)
-internal struct bitmap read_bitmap_file(const char* filepath, struct Arena* arena)
-{
-    u32 * out = 0;
-    
-    size_t arena_save = arena->used;
-    char* file_data = yk_read_binary_file(filepath, arena);
-    
-    struct BitmapHeader* header = (struct BitmapHeader*)file_data;
-    AssertM(header->depth == 32, "your bitmap must use 32 bytes for each pixel");
-    
-    struct bitmap result;
-    result.width = header->width;
-    result.height = header->height;
-    
-    arena->used = arena_save;
-    
-    result.pixels = push_array(arena,u32,result.width*result.height);
-    
-    memcpy(result.pixels, (u8*)file_data + header->pixel_offset,result.width * result.height * sizeof(u32));
-    
-    // erm, there has to be a better way to flip pixels right?
-    u32 temp;
-    for (size_t y = 0, yy = result.height; y < yy / 2; y++)
-    {
-        for (size_t x = 0, xx = result.width; x < xx ; x++)
-        {
-            temp = result.pixels[y * xx + x];
-            result.pixels[y * xx + x] = result.pixels[(yy- 1 - y) * xx + x];
-            result.pixels[(yy - 1 - y) * xx + x] = temp;
-        }
-    }
-    
-    
-    return result;
-}
-
 
 #define GAME_UPDATE_RATE (1/60.f)
 
@@ -206,11 +140,6 @@ int main(int argc, char *argv[])
     
     SDL_CHECK_RES(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO));
     
-    if(TTF_Init() != 0)
-    {
-        printf("%s",SDL_GetError());
-    }
-    
     const u32 tv_w  = 8;
     const u32 tv_h  = 6;
     const u32 pad_w = 4; // 4 on each side
@@ -243,40 +172,30 @@ int main(int argc, char *argv[])
     
     struct YkGame game = {0};
     
-    size_t mem_size = Megabytes(10);
+    size_t mem_size = Megabytes(100);
     arena_innit(&game.arena,mem_size,malloc(mem_size));
+    arena_innit(&game.scratch, mem_size,malloc(mem_size));
+    
     //platform
     game._win = win;
     game.platform_innit_audio = miniaudio_innit_audio;
     game.platform_play_audio = miniaudio_play_audio;
     game.platform_stop_audio = miniaudio_stop_audio;
     game.platform_set_title = sdl_set_title;
+    game.platform_read_file = yk_read_binary_file;
     
-    platform.innit_game(&game);
     
     struct render_buffer render_target = {0};
     // SDL_GetWindowSize(win, &render_target.height, &render_target.width);
-    render_target.height = 60;
-    render_target.width = 80;
-    render_target.pixels = push_array(&game.arena, sizeof(u32),render_target.height * render_target.width);
+    render_target.height = win_surf->h;
+    render_target.width = win_surf->w;
+    render_target.pixels = win_surf->pixels;
     
-    SDL_Surface *render_surface = SDL_CreateRGBSurfaceFrom(render_target.pixels, render_target.width, render_target.height, 32, render_target.width * sizeof(u32), 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-    
-    TTF_Font* font = TTF_OpenFont("../res/Delius-Regular.ttf",48);
-    
-    if(!font)
-    {
-        printf("%s",SDL_GetError());
-    }
-    SDL_Surface* text = TTF_RenderText_Solid(font, "dear dear", (SDL_Color){255,0,0});
-    SDL_Surface* text2 = TTF_RenderText_Solid(font, "loves you", (SDL_Color){255,0,0});
-    if(!text)
-    {
-        printf("%s",SDL_GetError());
-    }
+    platform.innit_game(&game, &render_target);
     
     
-    struct bitmap bmp = read_bitmap_file("../res/test.bmp",&game.arena);
+    
+    //struct bitmap bmp = read_bitmap_file("../res/test.bmp",&game.arena);
     
 #if 0
     //Dangerous! Only call if its a small image. You won't be able to ctrl + c out of this if its millions of pixels
@@ -289,7 +208,8 @@ int main(int argc, char *argv[])
         printl("");
     }
 #endif
-    SDL_Surface *bmo = SDL_CreateRGBSurfaceFrom(bmp.pixels, bmp.width, bmp.height, 32, bmp.width * sizeof(u32), 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+    
+    //SDL_Surface *bmo = SDL_CreateRGBSurfaceFrom(bmp.pixels, bmp.width, bmp.height, 32, bmp.width * sizeof(u32), 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
     
     SDL_DisplayMode dm;
     
@@ -444,58 +364,21 @@ int main(int argc, char *argv[])
         {
             //render_target.pixels[0] = 0xFFFF0000;
             
-            platform.update_and_render_game(&render_target, &input, &game, GAME_UPDATE_RATE);
             fixed_dt = 0;
             
             {
                 
-                //Note(facts): Not to happy with this. Move it to one of the events
+                //Note(facts): Not too happy with this. Move it to one of the events
+                
                 win_surf = SDL_GetWindowSurface(win);
+                render_target.pixels = win_surf->pixels;
+                render_target.width = win_surf->w;
+                render_target.height = win_surf->h;
+                platform.update_and_render_game(&render_target, &input, &game, GAME_UPDATE_RATE);
                 
                 
-                //tv render
-                SDL_Rect ren_rect;
-                
-                ren_rect.h = height - (height /pad_h*1.f) * (0.6f);
-                ren_rect.w = ren_rect.h * (tv_w*1.f/tv_h) ;
-                ren_rect.x = (width - ren_rect.w)/2;
-                ren_rect.y = 0;
-                SDL_BlitScaled(render_surface, 0, win_surf, &ren_rect);
-                
-                //debug text 1
-                SDL_Rect dstRect;
-                dstRect.x = width/2 - text->w/2;    
-                dstRect.y = ren_rect.h;    
-                dstRect.w = 0;
-                dstRect.h = 0;
-                
-                SDL_BlitSurface(text, 0, win_surf, &dstRect);
-                
-                //debug text 2
-                dstRect.x = width/2 - text->w/2;  
-                dstRect.y = ren_rect.h;
-                dstRect.w = 0;
-                dstRect.h = 0;
-                
-                SDL_BlitSurface(text2, 0, win_surf, &dstRect);
-                
-                
-                /*
-                                                                                                u32 tv_w = 8;
-                                                                                    u32 tv_h = 6;
-                                                                                    u32 pad_w = 4; // 4 on each side
-                                                                                    u32 pad_h = 3;
-                                                                                    u32 win_w = 16;
-                                                                                    u32 win_h = 9;
-                                                                                       */
             }
             
-            // Might fail. Leaving it like this until it doesn't
-            // It is possible that my window becomes invalid before
-            // I recreate it. I could be wrong about this.
-            // SDL_CHECK_RES(SDL_UpdateWindowSurface(win));
-            
-            // did fail. removed it.
             SDL_UpdateWindowSurface(win);
             
             for (u32 i = 0; i < YK_ACTION_COUNT; i++)
@@ -622,7 +505,7 @@ internal int yk_clone_file(const char* sourcePath, const char* destinationPath)
 }
 
 // Tested. Works.
-internal char* yk_read_binary_file(const char* filename, struct Arena* arena)
+char* yk_read_binary_file(const char* filename, struct Arena* arena)
 {
     FILE* file;
     fopen_s(&file, filename, "rb");

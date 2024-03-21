@@ -2,7 +2,8 @@
 #define YK_GAME_H
 
 #include <yk_common.h>
-#include <yk_arena.h> 
+#include <yk_arena.h>
+
 union v2i
 {
     struct
@@ -199,10 +200,14 @@ const char* messages[25] = {
         
 };
 
+
 #define MAX_APPLES (10)
 
 #define SNAKE_LEVEL_START_APPLE_NUM      (6)
 #define SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM (4)
+
+#include <yk_renderer.h>
+
 
 // ToDo(facts): Instead of having next wave initialization data inside the  if inside waves to go to the next wave,
 // make a next_wave function that is similar to next level load.
@@ -212,6 +217,8 @@ struct YkGame
 {
     //render context
     u32 opa;
+    struct render_buffer main;
+    struct render_buffer ui;
     
     // stage 0;
     v2i loading_bar;
@@ -253,6 +260,10 @@ struct YkGame
     YKMSG last_msg;
     
     struct Arena arena;
+    struct Arena scratch;
+    
+    struct bitmap rabbit;
+    struct bitmap welcome;
     
     //platform
     void * _win;
@@ -260,17 +271,12 @@ struct YkGame
     void (*platform_play_audio)(u32 audio_id);
     void (*platform_stop_audio)(u32 audio_id);
     void (*platform_set_title)(void * win, const char* title);
+    char* (*platform_read_file)(const char* filename, struct Arena* arena);
     
 };
 
-struct render_buffer
-{
-    u32 *pixels;
-    i32 width;
-    i32 height;
-};
 
-typedef void (*yk_innit_game_func)(struct YkGame *game);
+typedef void (*yk_innit_game_func)(struct YkGame *game, struct render_buffer *screen);
 typedef void (*yk_update_and_render_game_func)(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta);
 
 #endif
