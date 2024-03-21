@@ -253,27 +253,27 @@ int main(int argc, char *argv[])
     game.platform_set_title = sdl_set_title;
     
     platform.innit_game(&game);
+    struct game_render_buffer game_render_buffer = {0};
     
-    struct render_buffer render_target = {0};
+    
+    struct render_buffer* render_target = & game_render_buffer.main;
     // SDL_GetWindowSize(win, &render_target.height, &render_target.width);
-    render_target.height = 60;
-    render_target.width = 80;
-    render_target.pixels = push_array(&game.arena, sizeof(u32),render_target.height * render_target.width);
+    render_target->height = 60;
+    render_target->width = 80;
+    render_target->pixels = push_array(&game.arena, sizeof(u32),render_target->height * render_target->width);
     
-    SDL_Surface *render_surface = SDL_CreateRGBSurfaceFrom(render_target.pixels, render_target.width, render_target.height, 32, render_target.width * sizeof(u32), 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+    SDL_Surface *render_surface = SDL_CreateRGBSurfaceFrom(render_target->pixels, render_target->width, render_target->height, 32, render_target->width * sizeof(u32), 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
     
-    TTF_Font* font = TTF_OpenFont("../res/Delius-Regular.ttf",48);
     
-    if(!font)
-    {
-        printf("%s",SDL_GetError());
-    }
-    SDL_Surface* text = TTF_RenderText_Solid(font, "dear dear", (SDL_Color){255,0,0});
-    SDL_Surface* text2 = TTF_RenderText_Solid(font, "loves you", (SDL_Color){255,0,0});
-    if(!text)
-    {
-        printf("%s",SDL_GetError());
-    }
+    
+    
+    
+    struct render_buffer *ui_target = &game_render_buffer.ui;
+    ui_target->height = 200;
+    ui_target->width = 800;
+    ui_target->pixels = push_array(&game.arena, sizeof(u32), ui_target->height * ui_target->width);
+    SDL_Surface *ui_surface = SDL_CreateRGBSurfaceFrom(ui_target->pixels, ui_target.->idth, ui_target->height, 32, ui_target->width * sizeof(u32), 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+    
     
     
     struct bitmap bmp = read_bitmap_file("../res/test.bmp",&game.arena);
@@ -444,7 +444,7 @@ int main(int argc, char *argv[])
         {
             //render_target.pixels[0] = 0xFFFF0000;
             
-            platform.update_and_render_game(&render_target, &input, &game, GAME_UPDATE_RATE);
+            platform.update_and_render_game(&game_render_buffer, &input, &game, GAME_UPDATE_RATE);
             fixed_dt = 0;
             
             {
