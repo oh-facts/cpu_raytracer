@@ -21,6 +21,9 @@ I think a much better soln is used to have all the dialogue print beforehand. Th
 
 Perhaps we can do something like this. Dead pixels are just black squares that get rendererd randomly (fixed positions). Also now i do the candy colored background "static" since the noise is very distracting
 
+Another idea for a puzzle. game says "Sorry for making you wait for so long. I will have to put you on hold. I will be back before the logo hits a corner." 
+DVD logo thing happens.
+
 12. loading bar should be identical to snake.
 
 14. Don't call them waves. Call them stages.

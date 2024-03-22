@@ -9,4 +9,3 @@ CMakeSettings.json
 res/
 *.zip
 builds/
-vendor/stb*

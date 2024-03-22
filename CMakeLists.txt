@@ -15,10 +15,11 @@ include_directories(
     src
     vendor/SDL/include
     vendor/miniaudio
+	vendor/stb
 )
 
 #engine code
-add_library(ykr SHARED "src/yk_renderer.c")
+add_library(ykr SHARED "src/yk_renderer.c" "src/stb_truetype.c")
 target_link_libraries(ykr PRIVATE)
 
 #game code

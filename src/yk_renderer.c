@@ -1,4 +1,5 @@
 #include <yk_renderer.h>
+#include <stb_truetype.h>
 
 /*
     :vomit:
@@ -42,14 +43,14 @@ void blit_bitmap_scaled(struct render_buffer* dst, struct render_buffer* src, st
         {
             u32 pixel = src->pixels[y * src->width + x];
             
-            u32 destX = dst_rect->x + (u32)(x * scaleX);
-            u32 destY = dst_rect->y + (u32)(y * scaleY);
+            f32 destX = dst_rect->x + (x * scaleX);
+            f32 destY = dst_rect->y + (y * scaleY);
             
             draw_rect(dst,
                       destX,
                       destY,
-                      destX + (u32)scaleX,
-                      destY + (u32)scaleY,
+                      destX + scaleX,
+                      destY + scaleY,
                       pixel);
         }
     }
@@ -106,4 +107,14 @@ struct bitmap make_bmp_from_file(char* file_data, struct Arena* arena)
     
     
     return result;
+}
+
+struct bitmap make_bmp_font(char* file_data, struct Arena* arena)
+{
+    
+    struct bitmap out = {0};
+    
+    
+    
+    return out;
 }

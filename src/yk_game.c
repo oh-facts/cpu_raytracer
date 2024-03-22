@@ -248,7 +248,7 @@ void yk_innit_game(struct YkGame *game, struct render_buffer* buffer)
     game->main.pixels = push_array(&game->arena, u32, 80 * 60);
     
     {
-        char* file_data = game->platform_read_file("../res/a2.bmp",&game->scratch);
+        char* file_data = game->platform_read_file("../res/test.bmp",&game->scratch);
         //game->arena.used += Megabytes(30);
         game->rabbit = make_bmp_from_file(file_data,&game->arena);
         
@@ -614,10 +614,56 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
     
     blit_bitmap_scaled(screen, &game->main, &ren_rect);
     
-    ren_rect.h = 100;
-    ren_rect.w = 100;
-    ren_rect.x = 0;
-    ren_rect.y = 0;
+    ren_rect.h = screen->height / 3 ;
+    ren_rect.w = screen->height / 3;
+    
+    local_persist f32 movex = 0;
+    local_persist i32 dirx = 1;
+    
+    const i32 speed = 300;
+    
+    if(movex < (screen->width - ren_rect.w) && dirx == 1)
+    {
+        movex += delta * speed;
+        
+        if(movex >= screen->width - ren_rect.w)
+        {
+            dirx = -1;
+        }
+    }
+    else
+    {
+        movex -= delta * speed;
+        
+        if( movex <= 0)
+        {
+            dirx = 1 ;
+        }
+    }
+    
+    local_persist f32 movey = 0;
+    local_persist i32 diry = 1;
+    if(movey < (screen->height - ren_rect.h) && diry == 1)
+    {
+        movey += delta * speed;
+        if(movey >= screen->height - ren_rect.h)
+        {
+            diry = -1;
+        }
+    }
+    else
+    {
+        movey -= delta * speed;
+        
+        if( movey <= 0)
+        {
+            diry = 1 ;
+        }
+    }
+    
+    
+    ren_rect.x = movex;
+    ren_rect.y = movey; //(screen->height - ren_rect.h) / 2;
     
     //draw_rect(screen, 0,0,100,100,WHITE);
     
