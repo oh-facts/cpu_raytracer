@@ -76,20 +76,21 @@ struct BitmapHeader
 };
 #pragma pack(pop)
 
-struct bitmap read_bitmap_file(char* file_data, struct Arena* arena)
+struct bitmap make_bmp_from_file(char* file_data, struct Arena* arena)
 {
     u32 * out = 0;
     
     struct BitmapHeader* header = (struct BitmapHeader*)file_data;
     AssertM(header->depth == 32, "your bitmap must use 32 bytes for each pixel");
     
-    struct bitmap result;
+    struct bitmap result = {0};
     result.width = header->width;
     result.height = header->height;
     
     result.pixels = push_array(arena,u32,result.width*result.height);
     
     memcpy(result.pixels, (u8*)file_data + header->pixel_offset,result.width * result.height * sizeof(u32));
+    
     
     // erm, there has to be a better way to flip pixels right?
     u32 temp;

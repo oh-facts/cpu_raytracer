@@ -243,28 +243,29 @@ void yk_innit_game(struct YkGame *game, struct render_buffer* buffer)
     
     load_level(game);
     
-    
     game->main.width = game->width;
     game->main.height = game->height;
-    game->main.pixels = push_array(&game->arena, sizeof(u32), game->width * game->height);
+    game->main.pixels = push_array(&game->arena, u32, 80 * 60);
     
     {
-        char* file_data = game->platform_read_file("../res/test.bmp",&game->scratch);
-        game->rabbit = read_bitmap_file(file_data,&game->arena);
+        char* file_data = game->platform_read_file("../res/a2.bmp",&game->scratch);
+        //game->arena.used += Megabytes(30);
+        game->rabbit = make_bmp_from_file(file_data,&game->arena);
         
         game->scratch.used = 0;
     }
     
     {
+        /*
         char* file_data = game->platform_read_file("../res/font.bmp",&game->scratch);
-        game->welcome = read_bitmap_file(file_data,&game->arena);
+        game->welcome = make_bmp_from_file(file_data,&game->arena);
         
         game->scratch.used = 0;
-        
+        */
     }
     
-    game->saved = push_struct(&game->arena, game);
-    game_data_save(game);
+    //game->saved = push_struct(&game->arena, game);
+    //game_data_save(game);
     
     
 }
@@ -613,7 +614,14 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
     
     blit_bitmap_scaled(screen, &game->main, &ren_rect);
     
-    //blit_bitmap_scaled(screen,(struct render_buffer*) &game->rabbit,&ren_rect);
+    ren_rect.h = 100;
+    ren_rect.w = 100;
+    ren_rect.x = 0;
+    ren_rect.y = 0;
+    
+    //draw_rect(screen, 0,0,100,100,WHITE);
+    
+    blit_bitmap_scaled(screen,(struct render_buffer*) &game->rabbit,&ren_rect);
     
     //blit_bitmap_scaled(screen,(struct render_buffer*) &game->welcome,&ren_rect);
     

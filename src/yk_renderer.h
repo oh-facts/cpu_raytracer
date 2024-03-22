@@ -12,7 +12,6 @@ struct render_rect
     i32 x,y,w,h;
 };
 
-
 struct render_buffer
 {
     u32 *pixels;
@@ -21,7 +20,7 @@ struct render_buffer
 };
 
 // Note(facts): This is stored upside down. So I flip it (along x axis)
-YK_API struct bitmap read_bitmap_file(char* file_data, struct Arena* arena);
+YK_API struct bitmap make_bmp_from_file(char* file_data, struct Arena* arena);
 
 YK_API void blit_bitmap_scaled(struct render_buffer* dst, struct render_buffer* src, struct render_rect* dst_rect);
 

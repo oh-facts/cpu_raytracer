@@ -179,10 +179,10 @@ int main(int argc, char *argv[])
     //platform
     game._win = win;
     game.platform_innit_audio = miniaudio_innit_audio;
-    game.platform_play_audio = miniaudio_play_audio;
-    game.platform_stop_audio = miniaudio_stop_audio;
-    game.platform_set_title = sdl_set_title;
-    game.platform_read_file = yk_read_binary_file;
+    game.platform_play_audio  = miniaudio_play_audio;
+    game.platform_stop_audio  = miniaudio_stop_audio;
+    game.platform_set_title   = sdl_set_title;
+    game.platform_read_file   = yk_read_binary_file;
     
     
     struct render_buffer render_target = {0};
@@ -341,10 +341,6 @@ int main(int argc, char *argv[])
                                 SDL_SetWindowSize(win, width, height);
                             }
                             
-                            render_target.pixels = win_surf->pixels;
-                            render_target.width = win_surf->w;
-                            render_target.height = win_surf->h;
-                            
                             
                         }break;
                     }
@@ -361,6 +357,12 @@ int main(int argc, char *argv[])
         if (fixed_dt > 1 / 60.f)
         {
             fixed_dt = 0;
+            
+            win_surf = SDL_GetWindowSurface(win);
+            
+            render_target.pixels = win_surf->pixels;
+            render_target.width = win_surf->w;
+            render_target.height = win_surf->h;
             
             platform.update_and_render_game(&render_target, &input, &game, GAME_UPDATE_RATE);
             

@@ -3,6 +3,10 @@
 
 #include <yk_common.h>
 
+/*
+Note(oh-facts): Be very very careful when glossing over this file. At some point I swapped line 2 and 3 of arena alloc and got memory corruption (display kept getting overwritten and it took me hours to find it).
+*/
+
 struct Arena
 {
 	size_t size;
@@ -14,8 +18,9 @@ struct Arena
 internal void* _arena_alloc(struct Arena* arena, size_t size)
 {
 	Assert(arena->used + size <= arena->size);
+	
+    void* out = arena->base + arena->used;
 	arena->used += size;
-	void* out = arena->base + arena->used;
 	return out;
 }
 
