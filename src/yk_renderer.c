@@ -26,11 +26,35 @@ void draw_rect(struct render_buffer *screen, i32 minx, i32 miny, i32 maxx, i32 m
         
         for (u32 x = minx; x < maxx; x++)
         {
+            if(((rgba >> 24) & 0xFF) < 255)
+            {
+                continue;
+            }
+            
             *pixel++ = rgba;
         }
         row += screen->width * 4;
     }
 }
+
+void blit_bitmap(struct bitmap* dst, struct bitmap* src, struct render_rect* dst_rect)
+{
+    for(u32 y = 0; y < src->height; y++)
+    {
+        for(u32 x = 0; x < src->width; x++)
+        {
+            u32 pixel = src->pixels[y * src->width + x];
+            
+            draw_rect(dst,
+                      x + dst_rect->x,
+                      y + dst_rect->y,
+                      x + dst_rect->x+ 1,
+                      y+ dst_rect->y+ 1,
+                      pixel);
+        }
+    }
+}
+
 
 void blit_bitmap_scaled(struct render_buffer* dst, struct render_buffer* src, struct render_rect* dst_rect)
 {
@@ -109,12 +133,37 @@ struct bitmap make_bmp_from_file(char* file_data, struct Arena* arena)
     return result;
 }
 
-struct bitmap make_bmp_font(char* file_data, struct Arena* arena)
+struct bitmap make_bmp_font(char* file_data, char codepoint,  struct Arena* arena)
 {
     
     struct bitmap out = {0};
+    stbtt_fontinfo font;
+    stbtt_InitFont(&font, (u8*)file_data, stbtt_GetFontOffsetForIndex((u8*)file_data,0));
     
+    i32 w,h,xoff,yoff;
+    u8* bmp = stbtt_GetCodepointBitmap(&font, 0, stbtt_ScaleForPixelHeight(&font, 550), codepoint ,&w,&h, &xoff, &yoff);
     
+    out.width = w;
+    out.height = h;
+    out.pixels = push_array(arena,u32,w * h);
     
+    u8* src = bmp;
+    u8* dest_row = (u8*)out.pixels;
+    
+    for(u32 y = 0; y < h; y ++)
+    {
+        u32* dest = (u32*)dest_row;
+        for(u32 x = 0; x < w; x ++)
+        {
+            u8 alpha = *src++;
+            *dest++ = ((alpha <<24) |
+                       (alpha <<16) |
+                       (alpha << 8) |
+                       (alpha ));
+        }
+        dest_row += 4 * out.width;
+    }
+    
+    stbtt_FreeBitmap(bmp, 0);
     return out;
 }

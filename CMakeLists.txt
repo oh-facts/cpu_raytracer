@@ -27,7 +27,7 @@ add_library(yk2 SHARED "src/yk_game.c")
 target_link_libraries(yk2 PRIVATE  ykr)
 
 #platform code
-add_executable(yk_test "src/platform/yk_platform_sdl.c" "src/platform/yk_platform_miniaudio.c")
+add_executable(yk_test "src/platform/yk_platform_sdl.c" "src/platform/yk_platform_miniaudio.c" "src/platform/yk_platform.c")
 
 if(WIN32)
     target_link_libraries(yk_test SDL2main SDL2)

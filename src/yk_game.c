@@ -256,13 +256,46 @@ void yk_innit_game(struct YkGame *game, struct render_buffer* buffer)
     }
     
     {
-        /*
-        char* file_data = game->platform_read_file("../res/font.bmp",&game->scratch);
-        game->welcome = make_bmp_from_file(file_data,&game->arena);
+        
+        char* file_data = game->platform_read_file("../res/font1.ttf",&game->scratch);
+        
+        game->welcome = make_bmp_font(file_data, 'd' ,&game->arena);
+        
+        game->words[0] = make_bmp_font(file_data, 32, &game->arena);
+        
+        
+        for(u32 i = 1; i < 27; i ++)
+        {
+            game->words[i] = make_bmp_font(file_data, 97 + (i-1), &game->arena);
+        }
         
         game->scratch.used = 0;
-        */
+        
+        struct render_rect ren_rect;
+        
+        u32 text_i[4] = {4,5,1,18};
+        for(u32 i = 0; i < 4; i ++)
+        {
+            game->dear.width += game->words[text_i[i]].width;
+            game->dear.height += game->words[text_i[i]].height;
+        }
+        
+        game->dear.pixels = push_array(&game->arena,u32,game->dear.width * game->dear.height);
+        
+        ren_rect.w = 10;
+        ren_rect.y = 10;
+        ren_rect.x = 0;
+        ren_rect.y = 100;
+        
+        for(u32 i = 0; i < 4; i ++)
+        {
+            
+            blit_bitmap(&game->dear,(struct render_buffer*) &game->words[text_i[i]],&ren_rect);
+            ren_rect.x += game->words[text_i[i]].width;
+        }
+        
     }
+    
     
     //game->saved = push_struct(&game->arena, game);
     //game_data_save(game);
@@ -614,6 +647,8 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
     
     blit_bitmap_scaled(screen, &game->main, &ren_rect);
     
+    
+    // rabbit
     ren_rect.h = screen->height / 3 ;
     ren_rect.w = screen->height / 3;
     
@@ -665,13 +700,18 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
     ren_rect.x = movex;
     ren_rect.y = movey; //(screen->height - ren_rect.h) / 2;
     
-    //draw_rect(screen, 0,0,100,100,WHITE);
     
     blit_bitmap_scaled(screen,(struct render_buffer*) &game->rabbit,&ren_rect);
     
-    //blit_bitmap_scaled(screen,(struct render_buffer*) &game->welcome,&ren_rect);
     
-    //blit_bitmap_scaled(screen,(struct render_buffer*) &game->welcome,&ren_rect);
+    
+    // text
+    ren_rect.w = game->dear.width;
+    ren_rect.y = game->dear.height;
+    ren_rect.x = 0;
+    ren_rect.y = 100;
+    
+    blit_bitmap(screen, &game->dear, &ren_rect);
     
     
     // stupid debug

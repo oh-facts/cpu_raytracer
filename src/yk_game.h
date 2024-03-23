@@ -264,7 +264,8 @@ struct YkGame
     
     struct bitmap rabbit;
     struct bitmap welcome;
-    
+    struct bitmap words[27];
+    struct bitmap dear;
     //platform
     void * _win;
     u32 (*platform_innit_audio)(const char* path);

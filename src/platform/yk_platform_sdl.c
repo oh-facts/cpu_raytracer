@@ -7,7 +7,7 @@
 #include <time.h>
 
 #define DEBUG_SDL_CHECK 1
-#define LOG_STATS       0
+#define LOG_STATS       1
 
 #if DEBUG_SDL_CHECK
 #define SDL_CHECK_RES(res) _Assert_helper(res == 0, "[SDL Assert is Failure]\n%s", SDL_GetError())
@@ -120,18 +120,12 @@ void sdl_set_title(void* win, const char* title)
     SDL_SetWindowTitle(win, title);
 }
 
-#if _WIN32
-#include <Windows.h>
-#endif
 
 int main(int argc, char *argv[])
 {
-    // FUCK MICROSOFT (John Malkovitch voice)
-#if _WIN32
-    SetProcessDPIAware();
-#endif
-    
     // platform shit starts here ------------------------
+    platform_innit();
+    
     struct sdl_platform platform = {0};
     load_game_dll(&platform);
     
@@ -150,7 +144,7 @@ int main(int argc, char *argv[])
     SDL_Window *win = SDL_CreateWindow(
                                        "television",
                                        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 960, 540,
-                                       SDL_WINDOW_RESIZABLE);
+                                       SDL_WINDOW_RESIZABLE );
     
     SDL_CHECK(win);
     

@@ -11,5 +11,7 @@ struct bitmap
     i32 height;
 };
 
+// OS specific initializations
+void platform_innit();
 
 #endif //YK_PLATFORM_H
