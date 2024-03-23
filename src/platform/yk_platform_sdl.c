@@ -7,7 +7,7 @@
 #include <time.h>
 
 #define DEBUG_SDL_CHECK 1
-#define LOG_STATS       1
+#define LOG_STATS       0
 
 #if DEBUG_SDL_CHECK
 #define SDL_CHECK_RES(res) _Assert_helper(res == 0, "[SDL Assert is Failure]\n%s", SDL_GetError())

@@ -816,7 +816,7 @@ draw_candy_bg(struct YkGame* game, f32 delta)
             game->opa = game->opa > 255 ? 0 : game->opa;
             /*printl("%d",opa);*/
             pixel = (0xFF << 24) | ( (100) << 16) | ((36 - game->opa) << 8) | game->opa - 12;
-            
+            /*
             u32 overlay = 0x44000000;
             
             u8 src_r = (pixel >> 16) & 0xFF;
@@ -833,8 +833,9 @@ draw_candy_bg(struct YkGame* game, f32 delta)
             u8 new_b = (src_b * (255 - dst_a) + dst_b * dst_a) / 255;
             
             pixel = (0xFF << 24) | (new_r << 16) | (new_g << 8) | new_b;
-            
+            */
             pixels[width * i + j] = pixel;
+            
         }
     }
 }
