@@ -266,12 +266,6 @@ struct YkGame
     struct bitmap welcome;
     struct bitmap words[27];
     struct bitmap dear;
-    
-    //voxel stuff
-    struct bitmap cmap;
-    struct bmp_8bit hmap;
-    struct bitmap draw_image;
-    
     //platform
     void * _win;
     u32 (*platform_innit_audio)(const char* path);

@@ -254,20 +254,7 @@ void yk_innit_game(struct YkGame *game, struct render_buffer* buffer)
         
         game->scratch.used = 0;
     }
-    {
-        char* file_data = game->platform_read_file("../res/color_map.bmp",&game->scratch);
-        
-        game->cmap = make_bmp_from_file(file_data,&game->arena);
-        
-        game->scratch.used = 0;
-        
-        file_data = game->platform_read_file("../res/height_map.bmp",&game->scratch);
-        
-        game->hmap =  load_bmp(file_data,&game->arena);;
-        
-        game->scratch.used = 0;
-        
-    }
+    
     {
         
         char* file_data = game->platform_read_file("../res/font1.ttf",&game->scratch);
@@ -388,7 +375,7 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
 {
     
     game->timer += delta;
-    /*
+    
     if (yk_input_is_key_tapped(input, YK_ACTION_SAVE))
     {
         game_data_save(game);
@@ -725,73 +712,6 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
     ren_rect.y = 100;
     
     blit_bitmap(screen, &game->dear, &ren_rect);
-    */
-    
-    i32 h = screen->height;
-    i32 w = screen->height * 4.f/3;
-    
-    local_persist b8 initialized = 0;
-    
-    if(!initialized)
-    {
-        game->draw_image.width = w; 
-        game->draw_image.height = h;
-        game->draw_image.pixels = push_array(&game->arena, u32, w * h);
-        initialized = 1;
-    }
-    
-    static v2i pos = {100,100};
-    
-    if (yk_input_is_key_held(input, YK_ACTION_UP))
-    {
-        pos.y -= 1;
-    }
-    if (yk_input_is_key_held(input, YK_ACTION_DOWN))
-    {
-        pos.y += 1;
-    }
-    if (yk_input_is_key_held(input, YK_ACTION_LEFT))
-    {
-        pos.x -= 1;
-    }
-    if (yk_input_is_key_held(input, YK_ACTION_RIGHT))
-    {
-        pos.x += 1;
-    }
-    //printf("%d",pos.y);
-    
-    
-    i32 height  50;
-    i32 hor = 120;
-    i32 sh = 1;
-    i32 dist = 30;
-    
-    
-    for(i32 z = dist; z >= 1; z --)
-    {
-        v2i pleft = {-z + pos.x, -z + pos.y};
-        v2i pright = {z + pos.x, -z + pos.y};
-        
-        i32 dx = (pright.x - pleft.x)/w;
-        
-        for(i32 i = 0; i < w; i ++)
-        {
-            i32 height_on_screen = (height - game->hmap.pixels[pleft.x + pleft.y * game->hmap.width]) / z * sh + hor;
-            
-            draw_rect(&game->draw_image ,i,h - height_on_screen, i + 1, h, game->cmap.pixels[pleft.x + pleft.y * game->cmap.width]);
-            pleft.x += dx;
-        }
-    }
-    
-    struct render_rect ren_rect = {0};
-    ren_rect.h = h;
-    ren_rect.w = w;
-    ren_rect.x = (screen->width - w)/2;
-    blit_bitmap(screen, &game->draw_image, &ren_rect);
-    
-    
-    
-    
     
     
     // stupid debug

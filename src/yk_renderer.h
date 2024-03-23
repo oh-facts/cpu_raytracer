@@ -19,13 +19,6 @@ struct render_buffer
     i32 height;
 };
 
-struct bmp_8bit
-{
-    u8* pixels;
-    i32 width;
-    i32 height;
-};
-
 // Note(facts): This is stored upside down. So I flip it (along x axis)
 YK_API struct bitmap make_bmp_from_file(char* file_data, struct Arena* arena);
 
@@ -39,5 +32,4 @@ YK_API void draw_rect(struct render_buffer *screen, i32 minx, i32 miny, i32 maxx
 
 YK_API struct bitmap make_bmp_font(char* file_data, char codepoint,  struct Arena* arena);
 
-YK_API struct bmp_8bit load_bmp(char* file_data, struct Arena* arena);
 #endif //YK_RENDERER_H
