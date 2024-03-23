@@ -133,6 +133,41 @@ struct bitmap make_bmp_from_file(char* file_data, struct Arena* arena)
     return result;
 }
 
+// please unify this you goblin
+YK_API struct bmp_8bit load_bmp(char* file_data, struct Arena* arena)
+{
+    u8 * out = 0;
+    
+    struct BitmapHeader* header = (struct BitmapHeader*)file_data;
+    AssertM(header->depth == 8, "your bitmap must use 8 bytes for each pixel");
+    
+    struct bmp_8bit result = {0};
+    result.width = header->width;
+    result.height = header->height;
+    
+    result.pixels = push_array(arena,u8,result.width*result.height);
+    
+    memcpy(result.pixels, (u8*)file_data + header->pixel_offset,result.width * result.height * sizeof(u32));
+    
+    
+    // erm, there has to be a better way to flip pixels right?
+    u32 temp;
+    for (size_t y = 0, yy = result.height; y < yy / 2; y++)
+    {
+        for (size_t x = 0, xx = result.width; x < xx ; x++)
+        {
+            temp = result.pixels[y * xx + x];
+            result.pixels[y * xx + x] = result.pixels[(yy- 1 - y) * xx + x];
+            result.pixels[(yy - 1 - y) * xx + x] = temp;
+        }
+    }
+    
+    
+    return result;
+}
+
+
+
 struct bitmap make_bmp_font(char* file_data, char codepoint,  struct Arena* arena)
 {
     
