@@ -20,7 +20,7 @@ This is all for now. Engine + platform is still only ~600 loc so its very manage
 I have other committments and I will work on that. Television game is not dead.
 */
 
-bitmap
+struct bitmap
 {
     u32* pixels;
     i32 width;
