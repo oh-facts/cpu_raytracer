@@ -60,7 +60,7 @@ elseif(UNIX)
     add_custom_target(
         copy-so ALL
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${CMAKE_BINARY_DIR}/vendor/SDL/libSDL2-d.0.so
+            ${CMAKE_BINARY_DIR}/vendor/SDL/libSDL2-2.0.so
             ${CMAKE_BINARY_DIR}
         DEPENDS yk_test
     )
