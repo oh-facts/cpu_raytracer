@@ -3,15 +3,11 @@ I know what the title says but that is too ambitious of a project. I lack both t
 ## Software Rasterizer
 
 I render to a pixel buffer and then blit it to the window's surface. I use sdl2 for the platform layer and
-miniaudio for audio, and sdl_ttf to render text, all embedded inside `vendor/`. I don't actually rasterize yet. I am a deceitful cheat, among other things.
-
-I am using it to make a game for the Acerola Game Jam.
+miniaudio for audio. Both are inside `vendor/`.
 
 ## compile
 
 All dependencies are inside `vendor/`.
-
-They must be downloaded since SDL2 is making my life hard and SDL2_ttf's cmake is making my life harder and single header libraries are making me hard and I wish every library used a tool to generate a single header library to ship with (They can develop with multiple source/header files, but ship as a single header)
 
 You will have to clone the repo like this -
 

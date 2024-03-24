@@ -1,11 +1,19 @@
+# editor cache
 .vscode*
+.cache*
+.vs*
+
+# builds
 .out*
 out*
 build*
-.vs*
-.cache*
-compile_commands.json
-CMakeSettings.json
+builds*
+bin*
+
+# data
 res/
 *.zip
-builds/
+
+# misc
+compile_commands.json
+CMakeSettings.json

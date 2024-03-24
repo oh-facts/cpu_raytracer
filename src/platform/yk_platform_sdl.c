@@ -18,7 +18,7 @@
 #endif
 
 
-// ToDO: Haven't tested hot reloading on mac or linux.
+// Note: Haven't tested hot reloading on mac or linux.  
 #if     _WIN32
 #define GAME_DLL        "yk2.dll"
 #define GAME_DLL_CLONED "yk2_temp.dll"
