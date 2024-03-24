@@ -141,7 +141,7 @@ struct bitmap make_bmp_font(char* file_data, char codepoint,  struct Arena* aren
     stbtt_InitFont(&font, (u8*)file_data, stbtt_GetFontOffsetForIndex((u8*)file_data,0));
     
     i32 w,h,xoff,yoff;
-    u8* bmp = stbtt_GetCodepointBitmap(&font, 0, stbtt_ScaleForPixelHeight(&font, 550), codepoint ,&w,&h, &xoff, &yoff);
+    u8* bmp = stbtt_GetCodepointBitmap(&font, 0, stbtt_ScaleForPixelHeight(&font, 100), codepoint ,&w,&h, &xoff, &yoff);
     
     out.width = w;
     out.height = h;

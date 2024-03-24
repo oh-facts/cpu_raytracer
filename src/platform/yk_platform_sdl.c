@@ -1,4 +1,9 @@
-#include <SDL.h>
+#ifdef _WIN32
+    #include <SDL.h>
+#else
+    #include <SDL2/SDL.h>
+#endif
+
 #include <miniaudio.h>
 #include <yk_common.h>
 #include <yk_game.h>
@@ -26,8 +31,8 @@
 #define GAME_DLL        "libyk2.so"
 #define GAME_DLL_CLONED "libyk2_temp.so"
 #elif  __APPLE__        
-#define GAME_DLL        "yk2.dylib"
-#define GAME_DLL_CLONED "yk2_test.dylib"
+#define GAME_DLL        "libyk2.dylib"
+#define GAME_DLL_CLONED "libyk2_temp.dylib"
 #endif
 
 char* yk_read_binary_file(const char* filename, struct Arena* arena);
@@ -131,7 +136,7 @@ int main(int argc, char *argv[])
     
     f64 total_time_elapsed = 0;
     f64 dt = 0;
-    
+
     SDL_CHECK_RES(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO));
     
     SDL_Window *win = SDL_CreateWindow(
@@ -348,7 +353,7 @@ int main(int argc, char *argv[])
             win_surf = SDL_GetWindowSurface(win);
             
             render_target.pixels = win_surf->pixels;
-            render_target.width = win_surf->w;
+            render_target.width =  win_surf->w;
             render_target.height = win_surf->h;
             
             platform.update_and_render_game(&render_target, &input, &game, GAME_UPDATE_RATE);
@@ -409,12 +414,16 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+
+
 /*
 fopen_s() is only defined in windows
 */
-#ifdef __unix
+// thank you gruelingpine185 for correcting this
+#if defined(__unix__) || defined(__APPLE__)
 #define fopen_s(pFile, filepath, mode) ((*(pFile)) = fopen((filepath), (mode))) == NULL
 #endif
+
 /*
 Haven't tested it. Wrote it in a different engine. Modified it to use the arena
 */
@@ -456,19 +465,15 @@ internal int yk_clone_file(const char* sourcePath, const char* destinationPath)
     size_t bytesRead;
     
     fopen_s(&sourceFile, sourcePath, "rb");
-    if (sourceFile == NULL) {
-        perror("Error opening source file");
-        return 0;
-    }
+
+    AssertM(sourceFile, "Unable to open the file %s\n",sourcePath);
     
     fopen_s(&destinationFile, destinationPath, "wb");
-    if (destinationFile == NULL) {
-        perror("Error opening destination file");
-        fclose(sourceFile);
-        return 0;
-    }
+
+    AssertM(destinationFile, "Unable to open the file %s\n",destinationPath);
     
-    while ((bytesRead = fread(buffer, 1, sizeof(buffer), sourceFile)) > 0) {
+    while ((bytesRead = fread(buffer, 1, sizeof(buffer), sourceFile)) > 0) 
+    {
         fwrite(buffer, 1, bytesRead, destinationFile);
     }
     
@@ -485,8 +490,8 @@ char* yk_read_binary_file(const char* filename, struct Arena* arena)
     fopen_s(&file, filename, "rb");
     
     if (!file) {
-        perror("Failed to open file");
-        return NULL;
+        printf("Failed to open file %s",filename);
+        exit(3);
     }
     
     fseek(file, 0, SEEK_END);

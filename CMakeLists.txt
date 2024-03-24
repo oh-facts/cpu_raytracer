@@ -7,8 +7,9 @@ project(yk2)
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 #--------target--------#
-
-add_subdirectory(vendor/SDL EXCLUDE_FROM_ALL)
+if(WIN32)
+    add_subdirectory(vendor/SDL EXCLUDE_FROM_ALL)
+endif()
 
 include_directories(
     src
@@ -49,25 +50,6 @@ if(WIN32)
         copy-dlls ALL
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${CMAKE_BINARY_DIR}/vendor/SDL/SDL2d.dll
-            ${CMAKE_BINARY_DIR}
-        DEPENDS yk_test
-    )
-elseif(APPLE)
-    # Note(facts): Haven't tested this. I am assuming it is called libSDL2d.dylib
-    # It is probably called something else since sdl2 can't make up their mind on
-    # what to call their libraries
-    add_custom_target(
-        copy-dylibs ALL
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${CMAKE_BINARY_DIR}/vendor/SDL/libSDL2d.dylib
-            ${CMAKE_BINARY_DIR}
-        DEPENDS yk_test
-    )
-elseif(UNIX)
-    add_custom_target(
-        copy-so ALL
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${CMAKE_BINARY_DIR}/vendor/SDL/libSDL2-2.0.so
             ${CMAKE_BINARY_DIR}
         DEPENDS yk_test
     )

@@ -5,19 +5,12 @@
 #include <yk_common.h>
 
 /*
-ToDo(Facts):
-I am abandoning this project indefinitely. Here is my immediate to do for now, and since this is my most well made renderer so far, I will treat this with some respect.
 
-2. Optmize your renderer. Make a command buffer and draw to that, like you did in vulkan (This will eventually receive a vulkan renderer for 3d). I am doing it in "immediate" mode currently. (Technically I am doing everything on cpu so I can't imagine doing in a cmd buffer will this any faster)
+I have other. Television game is.
 
-3. My blitting functions work well, except my rects aren't dst rects. They are very clearly src rects. Basically, work on the API
+I am
 
-This is all for now. Engine + platform is still only ~600 loc so its very manageable and I've been deleting dead code.
-
-I have other committments and I will work on that. Television game is not dead.
-I am not dead
-
-- 3/23
+- 3/24
 */
 
 struct offscreen_buffer

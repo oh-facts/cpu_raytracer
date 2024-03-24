@@ -7,15 +7,20 @@ miniaudio for audio. Both are inside `vendor/`.
 
 ## compile
 
-All dependencies are inside `vendor/`.
+All dependencies are inside `vendor/`. sdl2 is added as a submodule. On linux and apple, the default directory is checked. This means you don't need to download submodules if you're on those OS.
 
 You will have to clone the repo like this -
 
 ```
+// for windows
 git clone --recursive https://github.com/oh-facts/cpu_raytracer.git
+
+// for linux/apple
+git clone https://github.com/oh-facts/cpu_raytracer.git
+
 ```
 
-If you have already cloned this repo. Then do this -
+If you're on windows and you've already cloned the repo. Do this -
 
 ```
 git pull
