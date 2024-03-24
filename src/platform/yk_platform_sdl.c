@@ -1,4 +1,4 @@
-#include <platform/yk_sdl2_include.h>
+#include <SDL.h>
 #include <miniaudio.h>
 #include <yk_common.h>
 #include <yk_game.h>

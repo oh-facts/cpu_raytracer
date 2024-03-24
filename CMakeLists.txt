@@ -19,12 +19,12 @@ include_directories(
 )
 
 #engine code
-add_library(ykr SHARED "src/yk_renderer.c" "src/stb_truetype.c")
-target_link_libraries(ykr PRIVATE)
+set(yke "src/yk_renderer.c" "src/stb_truetype.c")
 
 #game code
-add_library(yk2 SHARED "src/yk_game.c") 
-target_link_libraries(yk2 PRIVATE  ykr)
+set(ykg "src/yk_game.c")
+
+add_library(yk2 SHARED ${ykg} ${yke}) 
 
 #platform code
 add_executable(yk_test "src/platform/yk_platform_sdl.c" "src/platform/miniaudio.c" "src/platform/yk_platform.c")
@@ -37,7 +37,7 @@ if(UNIX)
     target_link_libraries(yk_test SDL2main SDL2  m)
 endif()
 
-#----------copy vendor dlls to bin folder (reqd for win32)----------#
+#----------copy vendor dlls to bin folder----------#
 
 if(WIN32)
     add_custom_target(
@@ -47,6 +47,23 @@ if(WIN32)
             ${CMAKE_BINARY_DIR}
         DEPENDS yk_test
     )
+elseif(APPLE)
+    add_custom_target(
+        copy-dylibs ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${CMAKE_BINARY_DIR}/vendor/SDL/libSDL2d.dylib
+            ${CMAKE_BINARY_DIR}
+        DEPENDS yk_test
+    )
+elseif(UNIX)
+    add_custom_target(
+        copy-so ALL
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${CMAKE_BINARY_DIR}/vendor/SDL/libSDL2d.so
+            ${CMAKE_BINARY_DIR}
+        DEPENDS yk_test
+    )
 endif()
+
 
 #-------------------------------------------------------------------#
