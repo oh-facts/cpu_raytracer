@@ -62,4 +62,6 @@ Now you should be able to run the binary. (If you don't put the resources, it wi
 
 Open an issue before you decide to work on it. I am unsure what one would want to add to this, since even I haven't been very clear about this engine's purpose, but please feel free to do whatever. Doing audio properly and text come to mind. I am probably working on them already so open an issue first.
 
+Thank you pine for keeping up with my snarkiness and getting it to run on mac
+
 <!-- //ctrl shift v (my vscode md viewer plugin keybind) -->
