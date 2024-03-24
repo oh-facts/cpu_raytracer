@@ -207,7 +207,7 @@ const char* messages[25] = {
 #define SNAKE_LEVEL_DEAD_PIXEL_APPLE_NUM (4)
 
 #include <yk_renderer.h>
-
+#include <platform/yk_platform.h>
 
 // ToDo(facts): Instead of having next wave initialization data inside the  if inside waves to go to the next wave,
 // make a next_wave function that is similar to next level load.
@@ -217,8 +217,8 @@ struct YkGame
 {
     //render context
     u32 opa;
-    struct render_buffer main;
-    struct render_buffer ui;
+    struct bitmap main;
+    struct bitmap ui;
     
     // stage 0;
     v2i loading_bar;
@@ -277,7 +277,7 @@ struct YkGame
 };
 
 
-typedef void (*yk_innit_game_func)(struct YkGame *game, struct render_buffer *screen);
-typedef void (*yk_update_and_render_game_func)(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta);
+typedef void (*yk_innit_game_func)(struct YkGame *game, struct offscreen_buffer *screen);
+typedef void (*yk_update_and_render_game_func)(struct offscreen_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta);
 
 #endif

@@ -5,20 +5,20 @@
     :vomit:
     my alpha blending was a sin so even though I require an alpha channel. I am not going to use it
 */
-void draw_rect(struct render_buffer *screen, i32 minx, i32 miny, i32 maxx, i32 maxy, u32 rgba)
+void draw_rect(struct bitmap* dst, i32 minx, i32 miny, i32 maxx, i32 maxy, u32 rgba)
 {
-    if(maxx < 0 || maxy < 0  || minx > screen->width || miny > screen->height)
+    if(maxx < 0 || maxy < 0  || minx > dst->width || miny > dst->height)
     {
         return;
     }
     
     minx = (minx < 0) ? 0 : minx;
     miny = (miny < 0) ? 0 : miny;
-    maxx = (maxx > screen->width) ? screen->width : maxx;
-    maxy = (maxy > screen->height) ? screen->height : maxy;
+    maxx = (maxx > dst->width) ? dst->width : maxx;
+    maxy = (maxy > dst->height) ? dst->height : maxy;
     
-    // ToDo(facts): store pitch inside render_buffer
-    u8 *row = (u8 *)screen->pixels + miny * (screen->width * 4) + minx * 4;
+    // ToDo(facts): store pitch inside offscreen_buffer
+    u8 *row = (u8 *)dst->pixels + miny * (dst->width * 4) + minx * 4;
     
     for (u32 y = miny; y < maxy; y++)
     {
@@ -33,40 +33,40 @@ void draw_rect(struct render_buffer *screen, i32 minx, i32 miny, i32 maxx, i32 m
             
             *pixel++ = rgba;
         }
-        row += screen->width * 4;
+        row += dst->width * 4;
     }
 }
 
 void blit_bitmap(struct bitmap* dst, struct bitmap* src, struct render_rect* dst_rect)
 {
+    u32* pixel = (u32*)src->pixels;
     for(u32 y = 0; y < src->height; y++)
     {
         for(u32 x = 0; x < src->width; x++)
         {
-            u32 pixel = src->pixels[y * src->width + x];
+            //u32 pixel = src->pixels[y * src->width + x];
             
             draw_rect(dst,
                       x + dst_rect->x,
                       y + dst_rect->y,
                       x + dst_rect->x+ 1,
                       y+ dst_rect->y+ 1,
-                      pixel);
+                      *pixel ++);
         }
     }
 }
 
 
-void blit_bitmap_scaled(struct render_buffer* dst, struct render_buffer* src, struct render_rect* dst_rect)
+void blit_bitmap_scaled(struct bitmap* dst, struct bitmap* src, struct render_rect* dst_rect)
 {
     f32 scaleX = (f32)dst_rect->w / (f32)src->width;
     f32 scaleY = (f32)dst_rect->h / (f32)src->height;
     
+    u32* pixel = (u32*)src->pixels;
     for(u32 y = 0; y < src->height; y++)
     {
         for(u32 x = 0; x < src->width; x++)
         {
-            u32 pixel = src->pixels[y * src->width + x];
-            
             f32 destX = dst_rect->x + (x * scaleX);
             f32 destY = dst_rect->y + (y * scaleY);
             
@@ -75,7 +75,7 @@ void blit_bitmap_scaled(struct render_buffer* dst, struct render_buffer* src, st
                       destY,
                       destX + scaleX,
                       destY + scaleY,
-                      pixel);
+                      *pixel++);
         }
     }
 }
@@ -123,9 +123,9 @@ struct bitmap make_bmp_from_file(char* file_data, struct Arena* arena)
     {
         for (size_t x = 0, xx = result.width; x < xx ; x++)
         {
-            temp = result.pixels[y * xx + x];
-            result.pixels[y * xx + x] = result.pixels[(yy- 1 - y) * xx + x];
-            result.pixels[(yy - 1 - y) * xx + x] = temp;
+            temp = ((u32*)result.pixels)[y * xx + x];
+            ((u32*)result.pixels)[y * xx + x] = ((u32*)result.pixels)[(yy- 1 - y) * xx + x];
+            ((u32*)result.pixels)[(yy - 1 - y) * xx + x] = temp;
         }
     }
     

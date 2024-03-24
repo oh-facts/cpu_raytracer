@@ -4,12 +4,9 @@
 #define YK_PLATFORM_H
 #include <yk_common.h>
 
-
 /*
 ToDo(Facts):
 I am abandoning this project indefinitely. Here is my immediate to do for now, and since this is my most well made renderer so far, I will treat this with some respect.
-
-1. Remove some of the game code inside the platform layer. Why is bitmap here? That is renderer stuff. render buffer should be here.
 
 2. Optmize your renderer. Make a command buffer and draw to that, like you did in vulkan (This will eventually receive a vulkan renderer for 3d). I am doing it in "immediate" mode currently. (Technically I am doing everything on cpu so I can't imagine doing in a cmd buffer will this any faster)
 
@@ -18,11 +15,14 @@ I am abandoning this project indefinitely. Here is my immediate to do for now, a
 This is all for now. Engine + platform is still only ~600 loc so its very manageable and I've been deleting dead code.
 
 I have other committments and I will work on that. Television game is not dead.
+I am not dead
+
+- 3/23
 */
 
-struct bitmap
+struct offscreen_buffer
 {
-    u32* pixels;
+    u32 *pixels;
     i32 width;
     i32 height;
 };

@@ -5,18 +5,18 @@
 
 #include <yk_common.h>
 #include <yk_arena.h>
-#include <platform/yk_platform.h>
 
 struct render_rect
 {
     i32 x,y,w,h;
 };
 
-struct render_buffer
+struct bitmap
 {
-    u32 *pixels;
+    void* pixels;
     i32 width;
     i32 height;
+    i32 depth;
 };
 
 // Note(facts): This is stored upside down. So I flip it (along x axis)
@@ -24,11 +24,9 @@ YK_API struct bitmap make_bmp_from_file(char* file_data, struct Arena* arena);
 
 YK_API void blit_bitmap(struct bitmap* dst, struct bitmap* src, struct render_rect* dst_rect);
 
-YK_API void blit_bitmap_scaled(struct render_buffer* dst, struct render_buffer* src, struct render_rect* dst_rect);
+YK_API void blit_bitmap_scaled(struct bitmap* dst, struct bitmap* src, struct render_rect* dst_rect);
 
-YK_API void blit_ttf(struct render_buffer* dst, i32 posx, i32 posy,  const char* text);
-
-YK_API void draw_rect(struct render_buffer *screen, i32 minx, i32 miny, i32 maxx, i32 maxy, u32 rgba);
+YK_API void draw_rect(struct bitmap *dst, i32 minx, i32 miny, i32 maxx, i32 maxy, u32 rgba);
 
 YK_API struct bitmap make_bmp_font(char* file_data, char codepoint,  struct Arena* arena);
 

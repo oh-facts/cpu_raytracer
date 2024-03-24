@@ -134,13 +134,6 @@ int main(int argc, char *argv[])
     
     SDL_CHECK_RES(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO));
     
-    const u32 tv_w  = 8;
-    const u32 tv_h  = 6;
-    const u32 pad_w = 4; // 4 on each side
-    const u32 pad_h = 3;
-    const u32 win_w = tv_w + 2 * pad_w;
-    const u32 win_h = tv_h + pad_h;
-    
     SDL_Window *win = SDL_CreateWindow(
                                        "television",
                                        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 960, 540,
@@ -179,7 +172,7 @@ int main(int argc, char *argv[])
     game.platform_read_file   = yk_read_binary_file;
     
     
-    struct render_buffer render_target = {0};
+    struct offscreen_buffer render_target = {0};
     render_target.height = win_surf->h;
     render_target.width = win_surf->w;
     render_target.pixels = win_surf->pixels;

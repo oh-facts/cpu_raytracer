@@ -1,9 +1,9 @@
 #include <yk_game.h>
 #include <yk_renderer.h>
 
-YK_API void yk_innit_game(struct YkGame *game, struct render_buffer *screen);
+YK_API void yk_innit_game(struct YkGame *game, struct offscreen_buffer *screen);
 
-YK_API void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta);
+YK_API void yk_update_and_render_game(struct offscreen_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta);
 
 
 
@@ -23,7 +23,7 @@ internal void send_msg(struct YkGame* game, YKMSG msg);
 void draw_candy_bg(struct YkGame* game, f32 delta);
 
 
-internal void draw_rect_pos_scale(struct render_buffer *screen, v2i pos, v2i scale,u32 rgba);
+internal void draw_rect_pos_scale(struct bitmap *screen, v2i pos, v2i scale,u32 rgba);
 
 #define V2I_FMT "%d %d"
 #define V2I_(s) (s).x, (s.y)
@@ -51,7 +51,7 @@ internal void randomise_apples(struct YkGame* game ,u32 width, u32 height, u32 n
 #define LOADING_BAR_Y 50
 #define LOADING_BAR_POS (v2i){LOADING_BAR_X, LOADING_BAR_Y};
 
-internal void draw_bar(struct render_buffer* screen, struct YkGame *game)
+internal void draw_bar(struct bitmap* screen, struct YkGame *game)
 {
     v2i _lb = game->loading_bar;
     u32 color = game->loading_bar_color;
@@ -61,7 +61,7 @@ internal void draw_bar(struct render_buffer* screen, struct YkGame *game)
     
 }
 
-internal void draw_apples(struct YkGame* game, struct render_buffer * screen, u32 color, u32 num_apples)
+internal void draw_apples(struct YkGame* game, struct bitmap * screen, u32 color, u32 num_apples)
 {
     for(u32 i = 0; i < num_apples; i ++)
     {
@@ -228,7 +228,7 @@ internal void send_msg(struct YkGame* game, YKMSG msg)
     //printf("w");
 }
 
-void yk_innit_game(struct YkGame *game, struct render_buffer* buffer)
+void yk_innit_game(struct YkGame *game, struct offscreen_buffer* buffer)
 {
     
     game->bgm = game->platform_innit_audio("../res/song0.wav");
@@ -290,7 +290,7 @@ void yk_innit_game(struct YkGame *game, struct render_buffer* buffer)
         for(u32 i = 0; i < 4; i ++)
         {
             
-            blit_bitmap(&game->dear,(struct render_buffer*) &game->words[text_i[i]],&ren_rect);
+            blit_bitmap(&game->dear, &game->words[text_i[i]],&ren_rect);
             ren_rect.x += game->words[text_i[i]].width;
         }
         
@@ -356,7 +356,7 @@ enum STATIC_MODE
 typedef enum STATIC_MODE STATIC_MODE;
 
 
-void draw_rect_pos_scale(struct render_buffer *screen, v2i pos, v2i scale,u32 rgba)
+void draw_rect_pos_scale(struct bitmap *screen, v2i pos, v2i scale,u32 rgba)
 {
     draw_rect(screen, pos.x - scale.x, pos.y - scale.y, pos.x + scale.x, pos.y + scale.y, rgba);
 }
@@ -371,7 +371,7 @@ b8 yk_input_is_key_held(struct YkInput *state, u32 key)
     return state->keys[key];
 }
 
-void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta)
+void yk_update_and_render_game(struct offscreen_buffer *screen, struct YkInput *input, struct YkGame *game, f32 delta)
 {
     
     game->timer += delta;
@@ -626,7 +626,6 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
     
     //memcpy(screen->pixels,)
     
-    
     u32 tv_w = 8;
     u32 tv_h = 6;
     u32 pad_w = 4; // 4 on each side
@@ -634,8 +633,11 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
     u32 win_w = 16;
     u32 win_h = 9;
     
+    //screen bmp
+    struct bitmap screen_bmp = {.pixels = screen->pixels, .width = screen->width, .height = screen->height};
+    
     //flush screen
-    draw_rect(screen,0,0,screen->width, screen->height,BLACK);
+    draw_rect(&screen_bmp,0,0,screen->width, screen->height,BLACK);
     
     //tv render
     struct render_rect ren_rect= {0};
@@ -645,7 +647,7 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
     ren_rect.x = (screen->width - ren_rect.w)/2;
     ren_rect.y = 0;
     
-    blit_bitmap_scaled(screen, &game->main, &ren_rect);
+    blit_bitmap_scaled(&screen_bmp, &game->main, &ren_rect);
     
     
     // rabbit
@@ -701,7 +703,7 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
     ren_rect.y = movey; //(screen->height - ren_rect.h) / 2;
     
     
-    blit_bitmap_scaled(screen,(struct render_buffer*) &game->rabbit,&ren_rect);
+    blit_bitmap_scaled(&screen_bmp, &game->rabbit,&ren_rect);
     
     
     
@@ -711,7 +713,7 @@ void yk_update_and_render_game(struct render_buffer *screen, struct YkInput *inp
     ren_rect.x = 0;
     ren_rect.y = 100;
     
-    blit_bitmap(screen, &game->dear, &ren_rect);
+    blit_bitmap(&screen_bmp, &game->dear, &ren_rect);
     
     
     // stupid debug
@@ -841,7 +843,7 @@ draw_candy_bg(struct YkGame* game, f32 delta)
 }
 
 
-void render_static(struct render_buffer * screen, STATIC_MODE mode)
+void render_static(struct offscreen_buffer * screen, STATIC_MODE mode)
 {
     
     u32 width = screen->width;
