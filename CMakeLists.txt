@@ -48,6 +48,7 @@ if(WIN32)
         DEPENDS yk_test
     )
 elseif(APPLE)
+    #Note(facts): Haven't tested this
     add_custom_target(
         copy-dylibs ALL
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -59,7 +60,7 @@ elseif(UNIX)
     add_custom_target(
         copy-so ALL
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${CMAKE_BINARY_DIR}/vendor/SDL/libSDL2d.so
+            ${CMAKE_BINARY_DIR}/vendor/SDL/libSDL2-d.0.so
             ${CMAKE_BINARY_DIR}
         DEPENDS yk_test
     )
